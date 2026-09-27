@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dice Challenge</title>
+<title>Dice Challenge · 다이스 챌린지</title>
 <style>
   :root {
     --bg: #ffffff;
@@ -234,11 +234,18 @@
   .message.win { color: var(--accent); }
   .message.lose { color: var(--danger); }
   .hidden { display: none; }
+  .kr {
+    display: inline-block;
+    font-size: 0.72em;
+    font-weight: 500;
+    opacity: 0.65;
+    margin-left: 8px;
+  }
 </style>
 </head>
 <body>
   <div class="card" id="card">
-    <h1 id="title">🎲 Dice Challenge</h1>
+    <h1 id="title">🎲 Dice Challenge <span class="kr">다이스 챌린지</span></h1>
     <div class="stage-label" id="stageLabel">Stage 1 / 7</div>
 
     <div id="gameArea">
@@ -271,19 +278,19 @@
         </div>
       </div>
 
-      <div class="sum-label" id="sumLabel">Pick Odd or Even, then click the dice to roll</div>
+      <div class="sum-label" id="sumLabel">Pick Odd or Even, then click the dice to roll <span class="kr">홀수 또는 짝수를 고른 후 주사위를 클릭해서 굴리세요</span></div>
       <div class="message" id="message"></div>
 
       <div class="guess-row">
-        <button id="btnOdd" class="guess-btn">ODD</button>
-        <button id="btnEven" class="guess-btn">EVEN</button>
+        <button id="btnOdd" class="guess-btn">ODD <span class="kr">홀수</span></button>
+        <button id="btnEven" class="guess-btn">EVEN <span class="kr">짝수</span></button>
       </div>
     </div>
 
     <div id="overArea" class="hidden">
       <div class="message" id="overMessage"></div>
       <img id="overImg" class="result-img" src="" alt="Stage result">
-      <button id="restartBtn" class="hidden">Play Again</button>
+      <button id="restartBtn" class="hidden">Play Again <span class="kr">다시 하기</span></button>
     </div>
   </div>
 
@@ -328,7 +335,7 @@
   }
 
   function updateStageLabel() {
-    stageLabel.textContent = `Stage ${stage} / ${TOTAL_STAGES}`;
+    stageLabel.innerHTML = `Stage ${stage} / ${TOTAL_STAGES} <span class="kr">스테이지 ${stage} / ${TOTAL_STAGES}</span>`;
   }
 
   function normalize(deg) {
@@ -363,7 +370,7 @@
     pedestal2.classList.remove('bounce');
     message.textContent = '';
     message.className = 'message';
-    sumLabel.textContent = 'Rolling...';
+    sumLabel.innerHTML = 'Rolling... <span class="kr">굴리는 중...</span>';
 
     const a = rollDie();
     const b = rollDie();
@@ -378,10 +385,10 @@
       const result = isOdd ? 'odd' : 'even';
       const win = result === selectedGuess;
 
-      sumLabel.textContent = `Sum this round: ${sum} (${isOdd ? 'Odd' : 'Even'})`;
+      sumLabel.innerHTML = `Sum this round: ${sum} (${isOdd ? 'Odd' : 'Even'}) <span class="kr">이번 라운드 합계: ${sum} (${isOdd ? '홀수' : '짝수'})</span>`;
 
       if (win) {
-        message.textContent = 'Correct! Stage cleared!';
+        message.innerHTML = 'Correct! Stage cleared! <span class="kr">정답! 스테이지 클리어!</span>';
         message.classList.add('win');
         setTimeout(() => {
           if (stage >= TOTAL_STAGES) {
@@ -393,7 +400,7 @@
           }
         }, 1000);
       } else {
-        message.textContent = 'Wrong guess. Game over!';
+        message.innerHTML = 'Wrong guess. Game over! <span class="kr">틀렸습니다. 게임 종료!</span>';
         message.classList.add('lose');
         setTimeout(() => showLose(stage), 1000);
       }
@@ -407,7 +414,7 @@
     btnOdd.disabled = false;
     btnEven.disabled = false;
     diceRow.classList.remove('ready', 'rolling');
-    sumLabel.textContent = 'Pick Odd or Even, then click the dice to roll';
+    sumLabel.innerHTML = 'Pick Odd or Even, then click the dice to roll <span class="kr">홀수 또는 짝수를 고른 후 주사위를 클릭해서 굴리세요</span>';
     message.textContent = '';
     locked = false;
   }
@@ -419,7 +426,7 @@
     overArea.classList.remove('hidden');
     restartBtn.classList.remove('hidden');
     card.classList.add('expanded');
-    overMessage.textContent = `You lost at Stage ${lostAtStage}!`;
+    overMessage.innerHTML = `You lost at Stage ${lostAtStage}! <span class="kr">스테이지 ${lostAtStage}에서 패배했습니다!</span>`;
     overMessage.className = 'message lose';
     overImg.src = `${lostAtStage}.jpg`;
     overImg.classList.remove('hidden');
@@ -432,7 +439,7 @@
     overArea.classList.remove('hidden');
     restartBtn.classList.remove('hidden');
     card.classList.add('expanded');
-    overMessage.textContent = `Congratulations! You cleared all ${TOTAL_STAGES} stages!`;
+    overMessage.innerHTML = `Congratulations! You cleared all ${TOTAL_STAGES} stages! <span class="kr">축하합니다! ${TOTAL_STAGES}개 스테이지를 모두 클리어했습니다!</span>`;
     overMessage.className = 'message win';
     overImg.classList.add('hidden');
   }
