@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dice Challenge</title>
+<style>
+  :root {
+    --bg: #1e2530;
+    --panel: #2a3342;
+    --accent: #4fd1c5;
+    --danger: #e56b6f;
+    --text: #f0f4f8;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    padding: 16px;
+  }
+  .card {
+    background: var(--panel);
+    border-radius: 20px;
+    padding: 48px;
+    width: 100%;
+    max-width: 680px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    transition: max-width 0.2s;
+  }
+  .card.expanded {
+    max-width: 96vw;
+    height: 100%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  h1 { margin: 0 0 12px; font-size: 2.1rem; }
+  .stage-label { color: var(--accent); font-weight: bold; margin-bottom: 28px; font-size: 1.3rem; }
+
+  .dice-row {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 32px 0;
+    opacity: 0.5;
+    filter: grayscale(0.6);
+    transition: opacity 0.2s, filter 0.2s;
+  }
+  .dice-row.ready {
+    opacity: 1;
+    filter: none;
+    cursor: pointer;
+  }
+  .dice-row.rolling {
+    pointer-events: none;
+  }
+  .dice-scene {
+    width: 120px;
+    height: 120px;
+    perspective: 800px;
+    border-radius: 18px;
+    transition: box-shadow 0.2s;
+  }
+  .dice-row.ready .dice-scene:hover {
+    box-shadow: 0 0 0 4px var(--accent);
+  }
+  .dice-cube {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    transform-style: preserve-3d;
+    transform: rotateX(0deg) rotateY(0deg);
+    transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .face {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    left: 0;
+    top: 0;
+    background: #f5f5f5;
+    border-radius: 18px;
+    box-shadow: inset 0 0 0 2px #ddd, 0 6px 14px rgba(0,0,0,0.35);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    padding: 16px;
+  }
+  .pip {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #23272f;
+    justify-self: center;
+    align-self: center;
+    opacity: 0;
+  }
+  /* physical layout: opposite faces sum to 7 */
+  .face-1 { transform: translateZ(60px); }
+  .face-6 { transform: rotateY(180deg) translateZ(60px); }
+  .face-2 { transform: rotateY(90deg) translateZ(60px); }
+  .face-5 { transform: rotateY(-90deg) translateZ(60px); }
+  .face-3 { transform: rotateX(-90deg) translateZ(60px); }
+  .face-4 { transform: rotateX(90deg) translateZ(60px); }
+
+  .face-1 .pip:nth-child(5) { opacity: 1; }
+  .face-2 .pip:nth-child(1), .face-2 .pip:nth-child(9) { opacity: 1; }
+  .face-3 .pip:nth-child(1), .face-3 .pip:nth-child(5), .face-3 .pip:nth-child(9) { opacity: 1; }
+  .face-4 .pip:nth-child(1), .face-4 .pip:nth-child(3), .face-4 .pip:nth-child(7), .face-4 .pip:nth-child(9) { opacity: 1; }
+  .face-5 .pip:nth-child(1), .face-5 .pip:nth-child(3), .face-5 .pip:nth-child(5), .face-5 .pip:nth-child(7), .face-5 .pip:nth-child(9) { opacity: 1; }
+  .face-6 .pip:nth-child(1), .face-6 .pip:nth-child(3), .face-6 .pip:nth-child(4), .face-6 .pip:nth-child(6), .face-6 .pip:nth-child(7), .face-6 .pip:nth-child(9) { opacity: 1; }
+
+  .sum-label { margin: 8px 0 28px; opacity: 0.8; min-height: 1.2em; font-size: 1.15rem; }
+
+  .guess-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  button {
+    padding: 20px 0;
+    font-size: 1.4rem;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s;
+  }
+  button:active { transform: scale(0.96); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .guess-btn {
+    flex: 1;
+    background: #3a4358;
+    color: var(--text);
+    box-shadow: inset 0 0 0 2px transparent;
+  }
+  .guess-btn.selected { box-shadow: inset 0 0 0 3px var(--accent); }
+  #btnOdd.selected { background: var(--accent); color: #10312e; }
+  #btnEven.selected { background: #f4a261; color: #3a2100; }
+
+  #restartBtn {
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    width: 100%;
+    max-width: 400px;
+    padding: 18px 0;
+    font-size: 1.2rem;
+    flex: 0 0 auto;
+  }
+  #overArea:not(.hidden) {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+  .result-img {
+    width: auto;
+    max-width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    object-fit: contain;
+    border-radius: 16px;
+    margin: 16px 0;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.4);
+  }
+  .message {
+    font-size: 1.5rem;
+    font-weight: bold;
+    min-height: 1.4em;
+    margin-bottom: 12px;
+    flex: 0 0 auto;
+  }
+  .message.win { color: var(--accent); }
+  .message.lose { color: var(--danger); }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <h1 id="title">🎲 Dice Challenge</h1>
+    <div class="stage-label" id="stageLabel">Stage 1 / 7</div>
+
+    <div id="gameArea">
+      <div class="dice-row" id="diceRow">
+        <div class="dice-scene">
+          <div class="dice-cube" id="cube1">
+            <div class="face face-1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="face face-2"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="face face-3"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="face face-4"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="face face-5"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="face face-6"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+          </div>
+        </div>
+        <div class="dice-scene">
+          <div class="dice-cube" id="cube2">
+            <div class="face face-1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="face face-2"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="face face-3"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="face face-4"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="face face-5"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            <div class="face face-6"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sum-label" id="sumLabel">Pick Odd or Even, then click the dice to roll</div>
+      <div class="message" id="message"></div>
+
+      <div class="guess-row">
+        <button id="btnOdd" class="guess-btn">ODD</button>
+        <button id="btnEven" class="guess-btn">EVEN</button>
+      </div>
+    </div>
+
+    <div id="overArea" class="hidden">
+      <div class="message" id="overMessage"></div>
+      <img id="overImg" class="result-img" src="" alt="Stage result">
+      <button id="restartBtn" class="hidden">Play Again</button>
+    </div>
+  </div>
+
+<script>
+  const TOTAL_STAGES = 7;
+  let stage = 1;
+  let locked = false;
+  let selectedGuess = null;
+
+  const ROTATIONS = {
+    1: { x: 0,   y: 0   },
+    2: { x: 0,   y: 90  },
+    3: { x: -90, y: 0   },
+    4: { x: 90,  y: 0   },
+    5: { x: 0,   y: -90 },
+    6: { x: 0,   y: 180 },
+  };
+
+  const cubeState1 = { x: 0, y: 0 };
+  const cubeState2 = { x: 0, y: 0 };
+
+  const card = document.getElementById('card');
+  const title = document.getElementById('title');
+  const stageLabel = document.getElementById('stageLabel');
+  const cube1 = document.getElementById('cube1');
+  const cube2 = document.getElementById('cube2');
+  const sumLabel = document.getElementById('sumLabel');
+  const message = document.getElementById('message');
+  const btnOdd = document.getElementById('btnOdd');
+  const btnEven = document.getElementById('btnEven');
+  const diceRow = document.getElementById('diceRow');
+  const gameArea = document.getElementById('gameArea');
+  const overArea = document.getElementById('overArea');
+  const overMessage = document.getElementById('overMessage');
+  const overImg = document.getElementById('overImg');
+  const restartBtn = document.getElementById('restartBtn');
+
+  function rollDie() {
+    return Math.floor(Math.random() * 6) + 1;
+  }
+
+  function updateStageLabel() {
+    stageLabel.textContent = `Stage ${stage} / ${TOTAL_STAGES}`;
+  }
+
+  function normalize(deg) {
+    return ((deg % 360) + 360) % 360;
+  }
+
+  function spinCubeTo(cubeEl, state, targetNumber) {
+    const target = ROTATIONS[targetNumber];
+    state.x += 360 * (2 + Math.floor(Math.random() * 2));
+    state.y += 360 * (2 + Math.floor(Math.random() * 2));
+    state.x += normalize(target.x) - normalize(state.x);
+    state.y += normalize(target.y) - normalize(state.y);
+    cubeEl.style.transform = `rotateX(${state.x}deg) rotateY(${state.y}deg)`;
+  }
+
+  function selectGuess(guess) {
+    if (locked) return;
+    selectedGuess = guess;
+    btnOdd.classList.toggle('selected', guess === 'odd');
+    btnEven.classList.toggle('selected', guess === 'even');
+    diceRow.classList.add('ready');
+  }
+
+  function rollDice() {
+    if (locked || !selectedGuess) return;
+    locked = true;
+    btnOdd.disabled = true;
+    btnEven.disabled = true;
+    diceRow.classList.remove('ready');
+    diceRow.classList.add('rolling');
+    message.textContent = '';
+    message.className = 'message';
+    sumLabel.textContent = 'Rolling...';
+
+    const a = rollDie();
+    const b = rollDie();
+    spinCubeTo(cube1, cubeState1, a);
+    spinCubeTo(cube2, cubeState2, b);
+
+    setTimeout(() => {
+      const sum = a + b;
+      const isOdd = sum % 2 === 1;
+      const result = isOdd ? 'odd' : 'even';
+      const win = result === selectedGuess;
+
+      sumLabel.textContent = `Sum this round: ${sum} (${isOdd ? 'Odd' : 'Even'})`;
+
+      if (win) {
+        message.textContent = 'Correct! Stage cleared!';
+        message.classList.add('win');
+        setTimeout(() => {
+          if (stage >= TOTAL_STAGES) {
+            showFinalWin();
+          } else {
+            stage += 1;
+            updateStageLabel();
+            resetRoundControls();
+          }
+        }, 1000);
+      } else {
+        message.textContent = 'Wrong guess. Game over!';
+        message.classList.add('lose');
+        setTimeout(() => showLose(stage), 1000);
+      }
+    }, 1100);
+  }
+
+  function resetRoundControls() {
+    selectedGuess = null;
+    btnOdd.classList.remove('selected');
+    btnEven.classList.remove('selected');
+    btnOdd.disabled = false;
+    btnEven.disabled = false;
+    diceRow.classList.remove('ready', 'rolling');
+    sumLabel.textContent = 'Pick Odd or Even, then click the dice to roll';
+    message.textContent = '';
+    locked = false;
+  }
+
+  function showLose(lostAtStage) {
+    title.classList.add('hidden');
+    stageLabel.classList.add('hidden');
+    gameArea.classList.add('hidden');
+    overArea.classList.remove('hidden');
+    restartBtn.classList.remove('hidden');
+    card.classList.add('expanded');
+    overMessage.textContent = `You lost at Stage ${lostAtStage}!`;
+    overMessage.className = 'message lose';
+    overImg.src = `${lostAtStage}.jpg`;
+    overImg.classList.remove('hidden');
+  }
+
+  function showFinalWin() {
+    title.classList.add('hidden');
+    stageLabel.classList.add('hidden');
+    gameArea.classList.add('hidden');
+    overArea.classList.remove('hidden');
+    restartBtn.classList.remove('hidden');
+    card.classList.add('expanded');
+    overMessage.textContent = `Congratulations! You cleared all ${TOTAL_STAGES} stages!`;
+    overMessage.className = 'message win';
+    overImg.classList.add('hidden');
+  }
+
+  function restart() {
+    stage = 1;
+    updateStageLabel();
+    resetRoundControls();
+    title.classList.remove('hidden');
+    stageLabel.classList.remove('hidden');
+    gameArea.classList.remove('hidden');
+    overArea.classList.add('hidden');
+    restartBtn.classList.add('hidden');
+    card.classList.remove('expanded');
+  }
+
+  btnOdd.addEventListener('click', () => selectGuess('odd'));
+  btnEven.addEventListener('click', () => selectGuess('even'));
+  diceRow.addEventListener('click', rollDice);
+  restartBtn.addEventListener('click', restart);
+
+  updateStageLabel();
+</script>
+</body>
+</html>
