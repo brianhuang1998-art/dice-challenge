@@ -26,7 +26,7 @@
     justify-content: center;
     background: var(--bg);
     color: var(--text);
-    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
     padding: 16px;
   }
   .card {
@@ -34,9 +34,9 @@
     border: 1px solid var(--panel-border);
     border-radius: 20px;
     padding: 20px 48px;
-    width: 100%;
-    max-width: 680px;
+    width: 680px;
     height: 800px;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     text-align: center;
@@ -193,6 +193,7 @@
 
   button {
     padding: 20px 0;
+    font-family: inherit;
     font-size: 1.4rem;
     border: none;
     border-radius: 12px;
@@ -334,12 +335,12 @@
         <button id="btnEven" class="guess-btn">EVEN <span class="kr">짝수</span></button>
       </div>
     </div>
+  </div>
 
-    <div id="overArea" class="hidden">
-      <div class="message" id="overMessage"></div>
-      <img id="overImg" class="result-img" src="" alt="Stage result">
-      <button id="restartBtn" class="hidden">Play Again <span class="kr">다시 하기</span></button>
-    </div>
+  <div id="overArea" class="hidden">
+    <div class="message" id="overMessage"></div>
+    <img id="overImg" class="result-img" src="" alt="Stage result">
+    <button id="restartBtn" class="hidden">Play Again <span class="kr">다시 하기</span></button>
   </div>
 
 <script>
@@ -374,6 +375,7 @@
     ...Array.from({ length: LOSE_IMG_COUNT }, (_, i) => i + 1),
   ].forEach(name => { new Image().src = imgUrl(name); });
 
+  const card = document.getElementById('card');
   const title = document.getElementById('title');
   const stageLabel = document.getElementById('stageLabel');
   const cube1 = document.getElementById('cube1');
@@ -598,6 +600,18 @@
   pedestal1.addEventListener('mousemove', (e) => flickDie(cubeState1, e));
   pedestal2.addEventListener('mousemove', (e) => flickDie(cubeState2, e));
   restartBtn.addEventListener('click', restart);
+
+  const PAGE_MARGIN = 16;
+  function fitCardToWindow() {
+    const scale = Math.min(
+      1,
+      (window.innerWidth - PAGE_MARGIN * 2) / card.offsetWidth,
+      (window.innerHeight - PAGE_MARGIN * 2) / card.offsetHeight,
+    );
+    card.style.transform = scale < 1 ? `scale(${scale})` : '';
+  }
+  window.addEventListener('resize', fitCardToWindow);
+  fitCardToWindow();
 
   updateStageLabel();
 </script>
