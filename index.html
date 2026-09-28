@@ -270,6 +270,7 @@
   #overMessage.lose { background: rgba(220, 38, 38, 0.92); color: #ffffff; }
   #overMessage.win  { background: rgba(13, 148, 136, 0.92); color: #ffffff; }
   .hidden { display: none; }
+  .invisible { visibility: hidden; }
   .kr {
     display: inline-block;
     font-size: 1em;
@@ -282,7 +283,7 @@
 <body>
   <div class="card" id="card">
     <h1 id="title">🎲 Dice Challenge <span class="kr">주사위 챌린지</span></h1>
-    <div class="stage-label" id="stageLabel">Stage 1 / 7</div>
+    <div class="stage-label" id="stageLabel">Stage 1 / 10 <span class="kr">스테이지 1 / 10</span></div>
 
     <div id="gameArea">
       <div class="dice-row" id="diceRow">
@@ -316,7 +317,7 @@
 
       <div class="sum-label intro" id="sumLabel">Pick Odd or Even, then click the dice to roll <span class="kr">홀수 또는 짝수를 고른 후 주사위를 클릭해서 굴리세요</span></div>
       <div class="message" id="message"></div>
-      <img id="winImg" class="win-img hidden" src="" alt="Correct">
+      <img id="winImg" class="win-img invisible" src="a.jpg" alt="Correct">
 
       <div class="guess-row">
         <button id="btnOdd" class="guess-btn">ODD <span class="kr">홀수</span></button>
@@ -349,6 +350,12 @@
   const cubeState1 = { x: 0, y: 0 };
   const cubeState2 = { x: 0, y: 0 };
   const WIN_LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm'];
+  const LOSE_IMG_COUNT = 21;
+
+  [
+    ...WIN_LETTERS.map(l => `${l}.jpg`),
+    ...Array.from({ length: LOSE_IMG_COUNT }, (_, i) => `${i + 1}.jpg`),
+  ].forEach(src => { new Image().src = src; });
 
   const card = document.getElementById('card');
   const title = document.getElementById('title');
@@ -409,7 +416,7 @@
     pedestal2.classList.remove('bounce');
     message.textContent = '';
     message.className = 'message';
-    winImg.classList.add('hidden');
+    winImg.classList.add('invisible');
     sumLabel.classList.remove('intro');
     sumLabel.innerHTML = 'Rolling... <span class="kr">굴리는 중...</span>';
 
@@ -433,7 +440,7 @@
         message.classList.add('win');
         const winLetter = WIN_LETTERS[Math.floor(Math.random() * WIN_LETTERS.length)];
         winImg.src = `${winLetter}.jpg`;
-        winImg.classList.remove('hidden');
+        winImg.classList.remove('invisible');
         setTimeout(() => {
           if (stage >= TOTAL_STAGES) {
             showFinalWin();
@@ -461,7 +468,7 @@
     sumLabel.classList.add('intro');
     sumLabel.innerHTML = 'Pick Odd or Even, then click the dice to roll <span class="kr">홀수 또는 짝수를 고른 후 주사위를 클릭해서 굴리세요</span>';
     message.textContent = '';
-    winImg.classList.add('hidden');
+    winImg.classList.add('invisible');
     locked = false;
   }
 
@@ -474,7 +481,7 @@
     card.classList.add('expanded');
     overMessage.innerHTML = `You lost at Stage ${lostAtStage}  ! <span class="kr">스테이지 ${lostAtStage}에서 패배했습니다  !</span>`;
     overMessage.className = 'message lose';
-    const randomImg = Math.floor(Math.random() * 22) + 1;
+    const randomImg = Math.floor(Math.random() * LOSE_IMG_COUNT) + 1;
     overImg.src = `${randomImg}.jpg`;
     overImg.classList.remove('hidden');
   }
