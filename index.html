@@ -99,23 +99,34 @@
     transition: transform 0.4s ease, opacity 0.4s ease;
   }
   .dice-pedestal.bounce .dice-shadow {
-    animation: shadowPulse 0.6s ease;
+    animation: shadowPulse 0.9s ease-out;
   }
   @keyframes shadowPulse {
-    0%   { transform: scale(1);   opacity: 0.25; }
-    30%  { transform: scale(0.6); opacity: 0.12; }
-    55%  { transform: scale(1.15); opacity: 0.3; }
-    100% { transform: scale(1);   opacity: 0.25; }
+    0%   { transform: scale(1.15); opacity: 0.32; }  /* impact 1 */
+    8%   { transform: scale(0.55); opacity: 0.10; }  /* airborne, peak 1 */
+    16%  { transform: scale(1.1);  opacity: 0.30; }  /* impact 2 */
+    24%  { transform: scale(0.7);  opacity: 0.14; }  /* airborne, peak 2 */
+    32%  { transform: scale(1.05); opacity: 0.27; }  /* impact 3 */
+    40%  { transform: scale(0.85); opacity: 0.18; }  /* airborne, peak 3 */
+    48%, 100% { transform: scale(1); opacity: 0.25; } /* settled */
   }
   .dice-pedestal.bounce .dice-scene {
-    animation: diceBounce 0.6s ease;
+    animation: diceBounce 0.9s ease-out;
   }
   @keyframes diceBounce {
-    0%   { transform: translateY(0) scale(1); }
-    30%  { transform: translateY(-22px) scale(1.04); }
-    55%  { transform: translateY(6px) scale(0.97); }
-    75%  { transform: translateY(-6px) scale(1.01); }
-    100% { transform: translateY(0) scale(1); }
+    0%   { transform: translateY(0)     scale(1, 0.92); }              /* impact 1: squash */
+    8%   { transform: translateY(-26px) scale(1.03, 1.03); }           /* bounce 1: biggest */
+    16%  { transform: translateY(0)     scale(1.04, 0.95); }           /* impact 2: squash, smaller */
+    24%  { transform: translateY(-13px) scale(1.015, 1.015); }         /* bounce 2: ~half of bounce 1 */
+    32%  { transform: translateY(0)     scale(1.02, 0.97); }           /* impact 3: squash, tiny */
+    40%  { transform: translateY(-6px)  scale(1.007, 1.007) rotate(0deg); } /* bounce 3: small */
+    48%  { transform: translateY(0)     scale(1) rotate(0deg); }       /* settled, micro-jitter starts */
+    58%  { transform: translateY(-1px)  scale(1) rotate(1.4deg); }
+    66%  { transform: translateY(0)     scale(1) rotate(-1.1deg); }
+    74%  { transform: translateY(-0.6px) scale(1) rotate(0.7deg); }
+    82%  { transform: translateY(0)     scale(1) rotate(-0.4deg); }
+    90%  { transform: translateY(-0.3px) scale(1) rotate(0.2deg); }
+    100% { transform: translateY(0)     scale(1) rotate(0deg); }
   }
   .dice-cube {
     position: relative;
