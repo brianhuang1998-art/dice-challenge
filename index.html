@@ -410,7 +410,7 @@
   }
 
   function tiltToward(cubeEl, state, e) {
-    const r = diceRow.getBoundingClientRect();
+    const r = cubeEl.parentElement.getBoundingClientRect();
     const dx = clamp((e.clientX - (r.left + r.width / 2)) / (r.width / 2));
     const dy = clamp((e.clientY - (r.top + r.height / 2)) / (r.height / 2));
     state.tiltX = -dy * MAX_TILT;
