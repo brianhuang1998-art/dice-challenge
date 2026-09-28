@@ -125,8 +125,11 @@
     width: 250px;
     height: 250px;
     transform-style: preserve-3d;
-    transform: rotateX(0deg) rotateY(0deg);
+    transform: rotateX(0deg) rotateY(0deg) rotateX(0deg) rotateY(0deg);
     transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .dice-cube.tilting {
+    transition: transform 0.15s ease-out;
   }
   .face {
     position: absolute;
@@ -342,8 +345,9 @@
     6: { x: 0,   y: 180 },
   };
 
-  const cubeState1 = { x: 0, y: 0 };
-  const cubeState2 = { x: 0, y: 0 };
+  const MAX_TILT = 180;
+  const cubeState1 = { x: 0, y: 0, tiltX: 0, tiltY: 0 };
+  const cubeState2 = { x: 0, y: 0, tiltX: 0, tiltY: 0 };
   const WIN_LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm'];
   const LOSE_IMG_COUNT = 21;
 
@@ -389,8 +393,32 @@
     state.y += 360 * (2 + Math.floor(Math.random() * 2));
     state.x += normalize(target.x) - normalize(state.x);
     state.y += normalize(target.y) - normalize(state.y);
-    cubeEl.style.transform = `rotateX(${state.x}deg) rotateY(${state.y}deg)`;
+    state.tiltX = 0;
+    state.tiltY = 0;
+    cubeEl.classList.remove('tilting');
+    applyCubeTransform(cubeEl, state);
   }
+
+  // Keep the same 4-function list every time, or the browser won't animate the multi-turn spin.
+  function applyCubeTransform(cubeEl, state) {
+    cubeEl.style.transform =
+      `rotateX(${state.tiltX}deg) rotateY(${state.tiltY}deg) rotateX(${state.x}deg) rotateY(${state.y}deg)`;
+  }
+
+  function clamp(v) {
+    return Math.max(-1, Math.min(1, v));
+  }
+
+  function tiltToward(cubeEl, state, e) {
+    const r = diceRow.getBoundingClientRect();
+    const dx = clamp((e.clientX - (r.left + r.width / 2)) / (r.width / 2));
+    const dy = clamp((e.clientY - (r.top + r.height / 2)) / (r.height / 2));
+    state.tiltX = -dy * MAX_TILT;
+    state.tiltY = dx * MAX_TILT;
+    cubeEl.classList.add('tilting');
+    applyCubeTransform(cubeEl, state);
+  }
+
 
   function selectGuess(guess) {
     if (locked) return;
@@ -444,7 +472,7 @@
             updateStageLabel();
             resetRoundControls();
           }
-        }, 4000);
+        }, 5000);
       } else {
         message.innerHTML = 'Wrong guess. Game over! <span class="kr">틀렸습니다. 게임 종료!</span>';
         message.classList.add('lose');
@@ -506,6 +534,11 @@
   btnOdd.addEventListener('click', () => selectGuess('odd'));
   btnEven.addEventListener('click', () => selectGuess('even'));
   diceRow.addEventListener('click', rollDice);
+  diceRow.addEventListener('mousemove', (e) => {
+    if (locked || !selectedGuess) return;
+    tiltToward(cube1, cubeState1, e);
+    tiltToward(cube2, cubeState2, e);
+  });
   restartBtn.addEventListener('click', restart);
 
   updateStageLabel();
