@@ -396,7 +396,7 @@
   const winImg = document.getElementById('winImg');
 
   function newCubeState(el) {
-    return { el, x: 0, y: 0, tilt: new DOMMatrix(), vx: 0, vy: 0, lastMove: 0 };
+    return { el, x: 0, y: 0, tilt: new DOMMatrix(), vx: 0, vy: 0, lastMove: 0, lastX: 0, lastY: 0 };
   }
   const cubeState1 = newCubeState(cube1);
   const cubeState2 = newCubeState(cube2);
@@ -469,10 +469,15 @@
   function flickDie(state, e) {
     if (locked || !selectedGuess) return;
     const dt = (e.timeStamp - state.lastMove) / 1000;
+    // Track the delta ourselves: movementX/Y units differ between browsers outside pointer lock.
+    const dx = e.clientX - state.lastX;
+    const dy = e.clientY - state.lastY;
     state.lastMove = e.timeStamp;
+    state.lastX = e.clientX;
+    state.lastY = e.clientY;
     if (dt <= 0 || dt > 0.1) return;
-    const targetVy = (e.movementX / dt) * DRAG_RATIO;
-    const targetVx = (-e.movementY / dt) * DRAG_RATIO;
+    const targetVy = (dx / dt) * DRAG_RATIO;
+    const targetVx = (-dy / dt) * DRAG_RATIO;
     state.vx = clampSpeed(state.vx + (targetVx - state.vx) * 0.5);
     state.vy = clampSpeed(state.vy + (targetVy - state.vy) * 0.5);
     state.el.classList.add('tilting');
