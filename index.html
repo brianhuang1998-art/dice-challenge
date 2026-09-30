@@ -44,6 +44,7 @@
   }
   #gameArea {
     flex: 1;
+    min-height: 0;  /* lets .win-img give up height if the content ever runs long */
     display: flex;
     flex-direction: column;
   }
@@ -54,7 +55,7 @@
     display: flex;
     justify-content: center;
     gap: 56px;
-    margin: 20px 0 8px;
+    margin: 12px 0 4px;
     opacity: 0.45;
     filter: grayscale(0.7);
     transition: opacity 0.2s, filter 0.2s;
@@ -228,7 +229,7 @@
   .face-5 .pip:nth-child(1), .face-5 .pip:nth-child(3), .face-5 .pip:nth-child(5), .face-5 .pip:nth-child(7), .face-5 .pip:nth-child(9) { opacity: 1; }
   .face-6 .pip:nth-child(1), .face-6 .pip:nth-child(3), .face-6 .pip:nth-child(4), .face-6 .pip:nth-child(6), .face-6 .pip:nth-child(7), .face-6 .pip:nth-child(9) { opacity: 1; }
 
-  .sum-label { margin: 20px 0 6px; opacity: 0.8; font-size: 1.15rem; line-height: 1.4; min-height: 3.22rem; }
+  .sum-label { margin: 14px 0 6px; opacity: 0.8; font-size: 1.15rem; line-height: 1.4; min-height: 3.22rem; }
   .sum-label.compact { font-size: 0.95rem; min-height: 1.33rem; margin-top: 6px; }
 
   .guess-row {
@@ -242,6 +243,7 @@
     padding: 20px 0;
     font-family: inherit;
     font-size: 1.4rem;
+    line-height: 1.2;
     border: none;
     border-radius: 12px;
     cursor: pointer;
@@ -312,6 +314,7 @@
   .win-img {
     width: 140px;
     height: 140px;
+    min-height: 0;  /* the only item allowed to shrink, so the buttons never leave the card */
     object-fit: contain;
     border-radius: 12px;
     margin: 0 auto 12px;
@@ -323,8 +326,9 @@
     min-height: auto;
     margin: 16px 0 0;
     padding: 8px 22px;
-    white-space: nowrap;
-    border-radius: 999px;
+    max-width: calc(100vw - 32px);
+    text-align: center;
+    border-radius: 18px;  /* a pill on one line, a rounded box once it wraps */
   }
   #overMessage.lose { background: rgba(220, 38, 38, 0.92); color: #ffffff; }
   #overMessage.win  { background: rgba(13, 148, 136, 0.92); color: #ffffff; }
