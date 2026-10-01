@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>주사위 홀짝게임</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffe4ee;
+    --panel: #fff8fb;
+    --panel-border: #f7b6cd;
+    --accent: #e0407a;
+    --danger: #c81e3c;
+    --text: #4a2338;
+    --btn-text: #ffffff;
+    --title-font: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(255,255,255,0.7) 0 2px, transparent 3px) 0 0 / 46px 46px,
+      radial-gradient(circle at 70% 60%, rgba(255,255,255,0.55) 0 1.5px, transparent 2.5px) 0 0 / 34px 34px,
+      linear-gradient(160deg, #ffd6e6 0%, #ffe9f1 45%, #fbd3e9 100%);
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    padding: 16px;
+  }
+  .layout {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+    flex-shrink: 0;
+  }
+  .card {
+    background: var(--panel);
+    border: 3px solid var(--panel-border);
+    border-radius: 28px;
+    padding: 20px 48px;
+    width: 700px;
+    height: 800px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    box-shadow: 0 0 0 6px rgba(255,255,255,0.7), 0 14px 34px rgba(224,64,122,0.22);
+  }
+
+  /* ---------- prize ladder (from the 주사위 홀짝게임 poster) ---------- */
+  .ladder {
+    width: 344px;
+    height: 800px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 18px 16px;
+    background: rgba(255,248,251,0.92);
+    border: 3px solid var(--panel-border);
+    border-radius: 28px;
+    box-shadow: 0 0 0 6px rgba(255,255,255,0.7), 0 14px 34px rgba(224,64,122,0.22);
+  }
+  .ladder-head {
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .ladder-title {
+    font-family: var(--title-font);
+    font-size: 1.75rem;
+    line-height: 1.1;
+    background: linear-gradient(180deg, #ff5f9e, #b0247a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 2px 0 #fff) drop-shadow(0 3px 2px rgba(176,36,122,0.25));
+  }
+  .ladder-ribbon {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 16px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--accent);
+    background: #fff;
+    border: 2px solid #f9a8c6;
+    border-radius: 999px;
+  }
+  .prize-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .prize {
+    --c: #888;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px 0 0;
+    background: #fffdf8;
+    border: 2px solid color-mix(in srgb, var(--c) 35%, white);
+    border-radius: 14px;
+    position: relative;
+    opacity: 0.72;
+    filter: saturate(0.8);
+    transition: opacity 0.3s, filter 0.3s, transform 0.3s, box-shadow 0.3s;
+  }
+  .prize-badge {
+    flex: 0 0 66px;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--title-font);
+    font-size: 1.35rem;
+    color: #fff;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--c) 70%, white), var(--c));
+    border-radius: 11px 0 0 11px;
+    text-shadow: 0 2px 0 rgba(0,0,0,0.22);
+  }
+  .prize-badge small { font-size: 0.75em; margin-left: 1px; }
+  .prize-name {
+    flex: 1;
+    text-align: left;
+    font-family: var(--title-font);
+    font-size: 1.3rem;
+    color: var(--c);
+    white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .prize-name small { font-size: 0.72em; margin-left: 4px; }
+  .prize-icon { font-size: 1.45rem; }
+  .prize-check {
+    position: absolute;
+    right: 44px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-12deg) scale(0);
+    padding: 1px 8px;
+    font-size: 0.72rem;
+    font-weight: bold;
+    color: var(--c);
+    border: 2px solid var(--c);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.85);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .prize.done { opacity: 1; filter: none; }
+  .prize.lost {
+    opacity: 0.4;
+    filter: grayscale(1);
+    animation: prizeLost 0.6s ease-out;
+  }
+  .prize.lost .prize-name { text-decoration: line-through 3px; }
+  @keyframes prizeLost {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(3px); }
+  }
+  .prize.done .prize-check { transform: translateY(-50%) rotate(-12deg) scale(1); }
+  .prize.current {
+    opacity: 1;
+    filter: none;
+    transform: scale(1.04);
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--c), 0 6px 16px color-mix(in srgb, var(--c) 45%, transparent);
+    animation: prizePulse 1.4s ease-in-out infinite;
+    z-index: 1;
+  }
+  .prize.current::before {
+    content: '▶';
+    position: absolute;
+    left: -16px;
+    color: var(--c);
+    font-size: 0.9rem;
+  }
+  @keyframes prizePulse {
+    0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--c), 0 6px 16px color-mix(in srgb, var(--c) 45%, transparent); }
+    50%      { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--c), 0 6px 26px color-mix(in srgb, var(--c) 75%, transparent); }
+  }
+  .prize.just-won { animation: prizeWon 0.9s ease-out; }
+  @keyframes prizeWon {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.12) rotate(-1.5deg); background: color-mix(in srgb, var(--c) 18%, white); }
+    60%  { transform: scale(0.98) rotate(1deg); }
+    100% { transform: scale(1); }
+  }
+  .prize.grand {
+    flex: 1.35;
+    background: linear-gradient(100deg, #ffe3f0, #fff4c9, #e3f4ff, #f1e3ff, #ffe3f0);
+  }
+  .prize.grand .prize-badge { background: linear-gradient(180deg, #ff7eb3, #d61f69); }
+  .prize.grand .prize-name {
+    font-size: 2rem;
+    background: linear-gradient(90deg, #e0407a, #ff8a00, #e0407a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .prize.grand .prize-icon { font-size: 1.9rem; }
+
+  .prize-img { width: 1.6em; height: 1.6em; object-fit: contain; vertical-align: middle; border-radius: 6px; }
+  .grand-heart .prize-img { width: 64px; height: 64px; }
+
+  .ladder-head { position: relative; }
+  .edit-btn {
+    position: absolute;
+    z-index: 2;  /* .ladder-title's filter paints it above earlier positioned siblings */
+    right: -6px;
+    top: -8px;
+    padding: 5px 11px;
+    font-size: 0.82rem;
+    font-weight: bold;
+    color: var(--accent);
+    background: #fff;
+    border: 2px solid #f9a8c6;
+    border-radius: 999px;
+  }
+  .edit-btn:hover { background: #ffe4ee; }
+  .edit-btn::after { content: ''; position: absolute; inset: -8px; }  /* bigger touch target */
+  .edit-btn:disabled { opacity: 0.4; }
+
+  .editor {
+    width: min(760px, calc(100vw - 24px));
+    max-height: calc(100vh - 24px);
+    padding: 0;
+    border: 3px solid var(--panel-border);
+    border-radius: 24px;
+    background: var(--panel);
+    color: var(--text);
+    box-shadow: 0 20px 60px rgba(176,36,122,0.35);
+  }
+  .editor::backdrop { background: rgba(74,35,56,0.45); }
+  .editor form { display: flex; flex-direction: column; max-height: calc(100vh - 30px); }
+  .editor-head { padding: 18px 22px 10px; border-bottom: 2px dashed #f7c6d8; }
+  .editor-head h2 { margin: 0 0 4px; font-family: var(--title-font); font-weight: normal; font-size: 1.6rem; color: #c2276a; }
+  .editor-head p { margin: 0 0 10px; font-size: 0.88rem; line-height: 1.45; opacity: 0.85; }
+  .editor-head p .en { display: block; margin: 0; }
+  .emoji-palette { display: flex; flex-wrap: wrap; gap: 4px; }
+  .emoji-palette button {
+    width: 36px; height: 36px; padding: 0;
+    font-size: 1.2rem; line-height: 1;
+    background: #fff; border: 1px solid #f7c6d8; border-radius: 8px;
+  }
+  .emoji-palette button:hover { background: #ffe4ee; }
+  .editor-rows { overflow-y: auto; padding: 10px 22px; display: flex; flex-direction: column; gap: 8px; }
+  .ed-row {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr) 76px 56px auto 44px;
+    gap: 8px;
+    align-items: center;
+    padding: 6px;
+    background: #fff;
+    border: 2px solid color-mix(in srgb, var(--c) 35%, white);
+    border-radius: 14px;
+  }
+  .ed-row.active { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 45%, transparent); }
+  .ed-badge {
+    align-self: stretch;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--title-font); font-size: 1.15rem; color: #fff;
+    background: var(--c); border-radius: 10px;
+  }
+  .ed-row input[type=text] {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--text);
+    border: 1.5px solid #ecd3de;
+    border-radius: 9px;
+    background: #fffafc;
+  }
+  .ed-row input[type=text]:focus { outline: 2px solid var(--c); border-color: transparent; }
+  .ed-row .ed-icon { text-align: center; font-size: 1.2rem; padding: 6px 4px; }
+  .ed-preview {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+  }
+  .ed-preview .prize-img { width: 36px; height: 36px; }
+  .ed-tools { display: flex; gap: 4px; align-items: center; }
+  .ed-tools .ed-btn { padding: 7px 9px; font-size: 0.8rem; }
+  .ed-color-btn {
+    width: 40px; height: 40px;
+    padding: 4px;
+    background: #fff;
+    border: 1.5px solid #ecd3de;
+    border-radius: 10px;
+  }
+  .ed-color-btn.open { border-color: var(--c); box-shadow: 0 0 0 2px var(--c); }
+  .ed-swatch {
+    display: block;
+    width: 100%; height: 100%;
+    border-radius: 6px;
+    background: var(--c);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+  }
+
+  /* color picker pop-up: presets, a hue x lightness grid, and the lightness slider */
+  .color-pop {
+    position: fixed;
+    z-index: 10;
+    width: 332px;
+    padding: 10px;
+    background: rgba(250,246,248,0.97);
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 16px;
+    box-shadow: 0 14px 40px rgba(74,35,56,0.35);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .color-pop[hidden] { display: none; }
+  .cp-presets, .cp-grid { display: grid; grid-template-columns: repeat(12, 1fr); overflow: hidden; }
+  .cp-presets { border-radius: 10px; margin-bottom: 8px; box-shadow: 0 0 0 1px rgba(0,0,0,0.1); }
+  .cp-grid { border-radius: 10px; box-shadow: 0 0 0 1px rgba(0,0,0,0.1); }
+  .cp-cell {
+    aspect-ratio: 1;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: var(--cell);
+    cursor: pointer;
+    position: relative;
+  }
+  .cp-presets .cp-cell { aspect-ratio: 1 / 1.1; }
+  .cp-cell:hover { z-index: 1; box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(0,0,0,0.5); }
+  .cp-cell.selected { z-index: 2; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #222; }
+  .cp-cell:active { transform: none; }
+  .cp-shade-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 2px 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #6b5260;
+  }
+  .cp-shade-row .ed-shade { --c: var(--pop-c); }
+  .cp-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .cp-preview {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--pop-c);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+  }
+  .cp-hex { flex: 1; font-family: ui-monospace, Menlo, monospace; font-size: 0.85rem; color: #6b5260; }
+  .color-pop .ed-btn.cp-more { padding: 3px 9px; font-size: 0.7rem; border-width: 1.5px; }
+  .cp-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  /* lightness slider: track runs from the darkest to the lightest version of the picked color */
+  .ed-shade {
+    flex: 1;
+    min-width: 0;
+    height: 10px;
+    margin: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--shade-dark), var(--shade-base), var(--shade-light));
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  .ed-shade::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--c);
+    border: 3px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  }
+  .ed-shade::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--c);
+    border: 3px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  }
+  .ed-btn {
+    padding: 9px 16px;
+    font-size: 0.95rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .ed-btn .en { margin-left: 4px; }
+  .ed-btn.primary { background: var(--accent); color: #fff; }
+  .ed-btn.ghost { background: #fff; color: var(--accent); border: 2px solid #f9a8c6; }
+  .editor-foot {
+    display: flex; gap: 8px; align-items: center;
+    padding: 12px 22px 16px;
+    border-top: 2px dashed #f7c6d8;
+  }
+  .editor-note { flex: 1; font-size: 0.82rem; color: var(--danger); }
+  @media (max-width: 620px) {
+    .ed-row { grid-template-columns: 44px minmax(0, 1fr) 70px; }
+    .ed-row .ed-tools { grid-column: 2; }
+    .ed-row .ed-color-btn { grid-column: 3; justify-self: start; }
+    .editor-foot { flex-wrap: wrap; }
+    .ed-btn .en { display: none; }
+  }
+
+  /* portrait screens: ladder moves under the game as a two-column grid */
+  @media (max-aspect-ratio: 1/1) {
+    .layout { flex-direction: column; }
+    .ladder { width: 700px; height: auto; }
+    .prize-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 52px; gap: 10px 14px; }
+    .prize.grand { grid-column: 1 / -1; }
+  }
+  .card { position: relative; overflow: hidden; }
+  .card > * { position: relative; z-index: 1; }
+  .card > .bg-girl {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    /* fade the image's own pink frame into the card */
+    -webkit-mask-image: radial-gradient(closest-side, #000 72%, transparent 100%);
+    mask-image: radial-gradient(closest-side, #000 72%, transparent 100%);
+  }
+  .bg-girl.dice  { width: 240px; left: -30px; bottom: -14px; }
+  .bg-girl.cheer { width: 200px; right: -26px; bottom: -18px; }
+  #gameArea {
+    flex: 1;
+    min-height: 0;  /* lets .win-img give up height if the content ever runs long */
+    display: flex;
+    flex-direction: column;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-family: var(--title-font);
+    font-weight: normal;
+    font-size: 2.3rem;
+    line-height: 1.2;
+    color: #c2276a;
+    text-shadow: 0 2px 0 #fff, 0 4px 6px rgba(194,39,106,0.2);
+  }
+  .stage-label { color: var(--accent); font-weight: bold; margin-bottom: 10px; font-size: 1.3rem; line-height: 1.2; }
+  .next-prize {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 12px;
+    font-family: var(--title-font);
+    font-weight: normal;
+    font-size: 1.05rem;
+    color: #fff;
+    background: var(--prize-color, var(--accent));
+    border-radius: 999px;
+    vertical-align: -4px;
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dice-row {
+    display: flex;
+    justify-content: center;
+    gap: 56px;
+    margin: 12px 0 4px;
+    opacity: 0.45;
+    filter: grayscale(0.7);
+    transition: opacity 0.2s, filter 0.2s;
+  }
+  .dice-row:focus-visible { outline: 3px dashed var(--accent); outline-offset: 6px; border-radius: 20px; }
+  .dice-row.ready {
+    opacity: 1;
+    filter: none;
+    cursor: pointer;
+  }
+  .dice-row.rolling {
+    pointer-events: none;
+  }
+  .dice-pedestal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .dice-scene {
+    width: 260px;
+    height: 260px;
+    perspective: 1000px;
+    transition: transform 0.25s ease-out;
+  }
+  /* touch screens keep :hover stuck after a tap, so only lift the die for real pointers */
+  @media (hover: hover) {
+    .dice-row.ready .dice-pedestal:hover .dice-scene {
+      transform: translateY(-14px) scale(1.04);
+    }
+    .dice-row.ready .dice-pedestal:hover .dice-shadow {
+      transform: scale(0.8);
+      opacity: 0.6;
+    }
+  }
+  .dice-row.ready .dice-pedestal {
+    animation: readyFloat 1.6s ease-in-out infinite;
+  }
+  @keyframes readyFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .dice-shadow {
+    width: 176px;
+    height: 30px;
+    margin-top: 15px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.2) 45%, rgba(0,0,0,0) 72%);
+    transition: transform 0.4s ease, opacity 0.4s ease;
+  }
+  .dice-pedestal.bounce .dice-shadow {
+    animation: shadowPulse 0.9s ease-out;
+  }
+  @keyframes shadowPulse {
+    0%   { transform: scale(1.15); opacity: 0.32; }  /* impact 1 */
+    8%   { transform: scale(0.55); opacity: 0.10; }  /* airborne, peak 1 */
+    16%  { transform: scale(1.1);  opacity: 0.30; }  /* impact 2 */
+    24%  { transform: scale(0.7);  opacity: 0.14; }  /* airborne, peak 2 */
+    32%  { transform: scale(1.05); opacity: 0.27; }  /* impact 3 */
+    40%  { transform: scale(0.85); opacity: 0.18; }  /* airborne, peak 3 */
+    48%, 100% { transform: scale(1); opacity: 0.25; } /* settled */
+  }
+  .dice-pedestal.bounce .dice-scene {
+    animation: diceBounce 0.9s ease-out;
+  }
+  @keyframes diceBounce {
+    0%   { transform: translateY(0)     scale(1, 0.92); }              /* impact 1: squash */
+    8%   { transform: translateY(-54px) scale(1.03, 1.03); }           /* bounce 1: biggest */
+    16%  { transform: translateY(0)     scale(1.04, 0.95); }           /* impact 2: squash, smaller */
+    24%  { transform: translateY(-27px) scale(1.015, 1.015); }         /* bounce 2: ~half of bounce 1 */
+    32%  { transform: translateY(0)     scale(1.02, 0.97); }           /* impact 3: squash, tiny */
+    40%  { transform: translateY(-13px) scale(1.007, 1.007) rotate(0deg); } /* bounce 3: small */
+    48%  { transform: translateY(0)     scale(1) rotate(0deg); }       /* settled, micro-jitter starts */
+    58%  { transform: translateY(-1px)  scale(1) rotate(1.4deg); }
+    66%  { transform: translateY(0)     scale(1) rotate(-1.1deg); }
+    74%  { transform: translateY(-0.6px) scale(1) rotate(0.7deg); }
+    82%  { transform: translateY(0)     scale(1) rotate(-0.4deg); }
+    90%  { transform: translateY(-0.3px) scale(1) rotate(0.2deg); }
+    100% { transform: translateY(0)     scale(1) rotate(0deg); }
+  }
+  /* fixed camera angle so the top and right faces show; set from VIEW_TILT in the script */
+  .dice-view {
+    width: 260px;
+    height: 260px;
+    transform-style: preserve-3d;
+  }
+  .dice-cube {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    transform-style: preserve-3d;
+    transform: matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1) rotateX(0deg) rotateY(0deg);
+    transition: transform var(--roll-duration, 1.5s) cubic-bezier(0.22, 1, 0.36, 1);  /* set from ROLL_MS */
+  }
+  .dice-cube.tilting {
+    transition: none;
+  }
+  .face {
+    position: absolute;
+    width: 260px;
+    height: 260px;
+    left: 0;
+    top: 0;
+    background: radial-gradient(120% 120% at 30% 25%, #ffffff 0%, #fff4f8 50%, #f6dce6 100%);
+    border-radius: 34px;
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,0.12),
+      inset 6px 6px 10px rgba(255,255,255,0.9),
+      inset -6px -6px 14px rgba(0,0,0,0.12);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    padding: 30px;
+  }
+  /* lighting: --shade is set per face from its angle to the light */
+  .face::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgb(20, 24, 32);
+    opacity: var(--shade, 0);
+    pointer-events: none;
+  }
+  /* solid inner block that shows through the rounded corners instead of a hole;
+     its own rounding keeps it tucked behind the outer faces when seen head-on */
+  .core {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    left: 5px;
+    top: 5px;
+    border-radius: 24px;
+    background: #ebc3d2;
+  }
+  .core-1 { transform: translateZ(125px); }
+  .core-6 { transform: rotateY(180deg) translateZ(125px); }
+  .core-2 { transform: rotateY(90deg) translateZ(125px); }
+  .core-5 { transform: rotateY(-90deg) translateZ(125px); }
+  .core-3 { transform: rotateX(-90deg) translateZ(125px); }
+  .core-4 { transform: rotateX(90deg) translateZ(125px); }
+  .pip {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 38%, #8a0f3a 0%, #d6336c 62%, #f06595 100%);
+    /* dark top rim + light bottom lip reads as a drilled hole */
+    box-shadow:
+      inset 0 4px 6px rgba(0,0,0,0.7),
+      inset 0 -2px 3px rgba(255,255,255,0.18),
+      0 1px 1px rgba(255,255,255,0.9);
+    justify-self: center;
+    align-self: center;
+    opacity: 0;
+  }
+  .face-1 .pip:nth-child(5) {
+    width: 96px;
+    height: 96px;
+    border-radius: 0;
+    background: radial-gradient(circle at 40% 30%, #ff8fb5 0%, #e11d5c 55%, #a3123f 100%);
+    box-shadow: none;
+    /* heart-shaped pip for the 1, like the poster's dice */
+    clip-path: path('M48 88 C20 66 4 50 4 30 C4 15 15 4 29 4 C38 4 45 9 48 16 C51 9 58 4 67 4 C81 4 92 15 92 30 C92 50 76 66 48 88 Z');
+  }
+  /* physical layout: opposite faces sum to 7 */
+  .face-1 { transform: translateZ(130px); }
+  .face-6 { transform: rotateY(180deg) translateZ(130px); }
+  .face-2 { transform: rotateY(90deg) translateZ(130px); }
+  .face-5 { transform: rotateY(-90deg) translateZ(130px); }
+  .face-3 { transform: rotateX(-90deg) translateZ(130px); }
+  .face-4 { transform: rotateX(90deg) translateZ(130px); }
+
+  .face-1 .pip:nth-child(5) { opacity: 1; }
+  .face-2 .pip:nth-child(1), .face-2 .pip:nth-child(9) { opacity: 1; }
+  .face-3 .pip:nth-child(1), .face-3 .pip:nth-child(5), .face-3 .pip:nth-child(9) { opacity: 1; }
+  .face-4 .pip:nth-child(1), .face-4 .pip:nth-child(3), .face-4 .pip:nth-child(7), .face-4 .pip:nth-child(9) { opacity: 1; }
+  .face-5 .pip:nth-child(1), .face-5 .pip:nth-child(3), .face-5 .pip:nth-child(5), .face-5 .pip:nth-child(7), .face-5 .pip:nth-child(9) { opacity: 1; }
+  .face-6 .pip:nth-child(1), .face-6 .pip:nth-child(3), .face-6 .pip:nth-child(4), .face-6 .pip:nth-child(6), .face-6 .pip:nth-child(7), .face-6 .pip:nth-child(9) { opacity: 1; }
+
+  .sum-label { margin: 14px 0 6px; opacity: 0.8; font-size: 1.15rem; line-height: 1.4; min-height: 3.22rem; }
+  .sum-label.compact { font-size: 0.95rem; min-height: 1.33rem; margin-top: 6px; }
+
+  .guess-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: auto;
+  }
+
+  button {
+    padding: 20px 0;
+    font-family: inherit;
+    font-size: 1.4rem;
+    line-height: 1.2;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    touch-action: manipulation;
+    transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s;
+  }
+  button:active { transform: scale(0.96); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .guess-btn {
+    width: 145px;
+    padding: 12px 0;
+    font-size: 1.02rem;
+    background: #c9a2b6;
+    color: var(--btn-text);
+    border-radius: 999px;
+    box-shadow: 0 4px 0 #a17d90;
+  }
+  .guess-btn.selected { box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 0 0 4px #fff, 0 0 0 7px currentColor; }
+  #btnOdd.selected { background: #e0407a; color: #fff; }
+  #btnEven.selected { background: #7b3fc4; color: #fff; }
+
+  #restartBtn {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    width: 100%;
+    max-width: 220px;
+    padding: 10px 0;
+    font-size: 0.95rem;
+    margin: 0 0 16px;
+  }
+  #overArea:not(.hidden) {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: safe center;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 16px 0;
+  }
+  .result-img {
+    height: 62vh;
+    aspect-ratio: 9 / 10;
+    max-width: 100%;
+    flex: 0 1 auto;
+    min-height: 0;
+    object-fit: cover;
+    border-radius: 0;
+    margin: 16px 0;
+    box-shadow: none;
+  }
+  .message {
+    font-size: 1.5rem;
+    font-weight: bold;
+    line-height: 1.3;
+    min-height: 3.9rem;
+    margin-bottom: 12px;
+  }
+  .message.win { color: var(--accent); font-size: 1.1rem; min-height: 1.43rem; margin-bottom: 4px; }
+  /* grows by exactly the height the compact sum label and win message give up, so layout below stays put */
+  .message.win + .win-img { width: calc(170px + 4.36rem); height: calc(170px + 4.36rem); margin-bottom: 4px; }
+  .message.lose { color: var(--danger); }
+  .win-img {
+    width: 140px;
+    height: 140px;
+    min-height: 0;  /* the only item allowed to shrink, so the buttons never leave the card */
+    object-fit: contain;
+    border-radius: 12px;
+    margin: 0 auto 12px;
+    display: block;
+  }
+  #overMessage {
+    flex: 0 0 auto;
+    font-size: 0.95rem;
+    min-height: auto;
+    margin: 16px 0 0;
+    padding: 8px 22px;
+    max-width: calc(100vw - 32px);
+    text-align: center;
+    border-radius: 18px;  /* a pill on one line, a rounded box once it wraps */
+  }
+  #overMessage.lose { background: rgba(220, 38, 38, 0.92); color: #ffffff; }
+  #overMessage.win  { background: rgba(224, 64, 122, 0.92); color: #ffffff; }
+  #overArea:not(.hidden) {
+    background:
+      radial-gradient(circle at 12% 18%, rgba(255,255,255,0.7) 0 2px, transparent 3px) 0 0 / 46px 46px,
+      linear-gradient(160deg, #ffd6e6 0%, #ffe9f1 45%, #fbd3e9 100%);
+  }
+  .earned {
+    flex: 0 0 auto;
+    margin: 0 0 14px;
+    text-align: center;
+  }
+  .earned-caption { font-size: 0.95rem; font-weight: bold; color: var(--text); opacity: 0.75; margin-bottom: 6px; }
+  .earned .prize { opacity: 1; filter: none; width: 340px; height: 56px; margin: 0 auto; flex: none; }
+  .earned .prize-check { display: none; }
+  .lost-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    max-width: min(560px, calc(100vw - 32px));
+    margin: 0 auto;
+  }
+  .lost-chip {
+    padding: 4px 12px;
+    font-family: var(--title-font);
+    font-size: 1rem;
+    color: var(--c);
+    background: #fff;
+    border: 2px solid color-mix(in srgb, var(--c) 40%, white);
+    border-radius: 999px;
+    text-decoration-line: line-through;
+    text-decoration-thickness: 2px;
+    opacity: 0.75;
+  }
+  .earned-none { font-family: var(--title-font); font-size: 1.4rem; color: #9b6b84; }
+
+  /* final 10승 screen */
+  .grand-card {
+    position: relative;
+    width: min(520px, calc(100vw - 32px));
+    padding: 34px 20px 30px;
+    margin: 18px 0;
+    text-align: center;
+    border-radius: 32px;
+    background: linear-gradient(120deg, #ffe3f0, #fff4c9, #e3f4ff, #f1e3ff, #ffe3f0);
+    background-size: 300% 100%;
+    animation: rainbowSlide 6s linear infinite;
+    box-shadow: 0 0 0 6px #fff, 0 0 0 10px #f9a8c6, 0 20px 50px rgba(224,64,122,0.35);
+  }
+  @keyframes rainbowSlide { to { background-position: 300% 0; } }
+  .grand-crown { font-size: 3.4rem; line-height: 1; animation: crownBob 1.6s ease-in-out infinite; }
+  @keyframes crownBob { 50% { transform: translateY(-8px) rotate(-6deg); } }
+  .grand-wins { font-family: var(--title-font); font-size: 2rem; color: #c2276a; margin-top: 6px; }
+  .grand-prize {
+    font-family: var(--title-font);
+    font-size: var(--grand-size, 6.5rem);
+    overflow-wrap: anywhere;
+    line-height: 1.1;
+    background: linear-gradient(90deg, #e0407a, #ff8a00, #b0247a, #e0407a);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rainbowSlide 3s linear infinite;
+    filter: drop-shadow(0 3px 0 #fff) drop-shadow(0 6px 8px rgba(176,36,122,0.3));
+  }
+  .grand-heart { font-size: 3rem; animation: heartBeat 1s ease-in-out infinite; }
+  @keyframes heartBeat { 15% { transform: scale(1.25); } 30% { transform: scale(1); } 45% { transform: scale(1.15); } }
+  .heart-rain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 51;
+  }
+  .heart-rain span {
+    position: absolute;
+    top: -40px;
+    animation: heartFall linear forwards;
+  }
+  @keyframes heartFall { to { transform: translateY(110vh) rotate(360deg); } }
+  .hidden { display: none; }
+  .invisible { visibility: hidden; }
+  .en {
+    display: inline-block;
+    font-size: 1em;
+    font-weight: 500;
+    opacity: 0.65;
+    margin-left: 8px;
+  }
+</style>
+</head>
+<body>
+  <div class="layout" id="layout">
+  <div class="card" id="card">
+    <img class="bg-girl dice" src="girl-dice.png" alt="">
+    <img class="bg-girl cheer" src="girl-cheer.png" alt="">
+    <h1 id="title">🎲 주사위 홀짝게임 <span class="en">Dice Odd · Even</span></h1>
+    <div class="stage-label" id="stageLabel">스테이지 1 / 10</div>
+
+    <div id="gameArea">
+      <div class="dice-row" id="diceRow" role="button" tabindex="0" aria-label="주사위 굴리기 Roll the dice">
+        <div class="dice-pedestal" id="pedestal1">
+          <div class="dice-scene">
+            <div class="dice-view">
+            <div class="dice-cube" id="cube1">
+              <div class="core core-1"></div><div class="core core-2"></div><div class="core core-3"></div><div class="core core-4"></div><div class="core core-5"></div><div class="core core-6"></div>
+              <div class="face face-1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+              <div class="face face-2"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+              <div class="face face-3"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+              <div class="face face-4"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+              <div class="face face-5"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+              <div class="face face-6"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            </div>
+            </div>
+          </div>
+          <div class="dice-shadow"></div>
+        </div>
+        <div class="dice-pedestal" id="pedestal2">
+          <div class="dice-scene">
+            <div class="dice-view">
+            <div class="dice-cube" id="cube2">
+              <div class="core core-1"></div><div class="core core-2"></div><div class="core core-3"></div><div class="core core-4"></div><div class="core core-5"></div><div class="core core-6"></div>
+              <div class="face face-1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+              <div class="face face-2"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+              <div class="face face-3"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+              <div class="face face-4"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+              <div class="face face-5"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+              <div class="face face-6"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+            </div>
+            </div>
+          </div>
+          <div class="dice-shadow"></div>
+        </div>
+      </div>
+
+      <div class="sum-label" id="sumLabel">홀수 또는 짝수를 고른 후 주사위를 클릭해서 굴리세요 <span class="en">Pick Odd or Even, then click the dice to roll</span></div>
+      <div class="message" id="message"></div>
+      <img id="winImg" class="win-img invisible" alt="Correct">
+
+      <div class="guess-row">
+        <button id="btnOdd" class="guess-btn">홀수 <span class="en">ODD</span></button>
+        <button id="btnEven" class="guess-btn">짝수 <span class="en">EVEN</span></button>
+      </div>
+    </div>
+  </div>
+
+  <aside class="ladder" id="ladder">
+    <div class="ladder-head">
+      <button class="edit-btn" id="editBtn" type="button" title="선물 편집 · Edit prizes">⚙️ 편집</button>
+      <div class="ladder-title">👑 선물 사다리</div>
+      <div class="ladder-ribbon">운을 굴려 ❤ 선물을 GET!</div>
+    </div>
+    <ol class="prize-list" id="prizeList"></ol>
+  </aside>
+  </div>
+
+  <dialog class="editor" id="editor">
+    <form method="dialog" id="editorForm">
+      <div class="editor-head">
+        <h2>🎁 선물 편집 <span class="en">Edit prizes</span></h2>
+        <p>각 승수의 선물 이름과 아이콘을 입력하세요. 아이콘은 이모지를 쓰거나 이미지를 올릴 수 있어요.
+          <span class="en">Enter a name and icon for each win count. Use an emoji or upload an image.</span></p>
+        <div class="emoji-palette" id="emojiPalette" title="클릭하면 선택한 칸에 들어가요"></div>
+      </div>
+      <div class="editor-rows" id="editorRows"></div>
+      <div class="editor-foot">
+        <button type="button" class="ed-btn ghost" id="resetPrizes">기본값 복원 <span class="en">Reset</span></button>
+        <span class="editor-note" id="editorNote"></span>
+        <button type="button" class="ed-btn ghost" id="cancelEdit">취소 <span class="en">Cancel</span></button>
+        <button type="submit" class="ed-btn primary" id="savePrizes">저장 <span class="en">Save</span></button>
+      </div>
+    </form>
+    <div class="color-pop" id="colorPop" hidden>
+      <div class="cp-presets" id="cpPresets"></div>
+      <div class="cp-grid" id="cpGrid"></div>
+      <div class="cp-shade-row">
+        <span>어둡게</span>
+        <input type="range" class="ed-shade" id="cpShade" step="1" title="어둡게 ◀ ▶ 밝게 (더블클릭: 원래 색)" aria-label="색 밝기 Lightness">
+        <span>밝게</span>
+      </div>
+      <div class="cp-foot">
+        <span class="cp-preview"></span>
+        <span class="cp-hex" id="cpHex"></span>
+        <button type="button" class="ed-btn ghost cp-more" id="cpMore">기타 색상…</button>
+        <input type="color" class="cp-native" id="cpNative" tabindex="-1">
+      </div>
+    </div>
+  </dialog>
+
+  <div id="overArea" class="hidden">
+    <div class="message" id="overMessage"></div>
+    <img id="overImg" class="result-img" src="" alt="Stage result">
+    <div class="grand-card hidden" id="grandCard">
+      <div class="grand-crown">👑</div>
+      <div class="grand-wins">10승 달성!</div>
+      <div class="grand-prize" id="grandPrize"></div>
+      <div class="grand-heart" id="grandIcon"></div>
+    </div>
+    <div class="earned" id="earned"></div>
+    <button id="restartBtn" class="hidden">다시 하기 <span class="en">Play Again</span></button>
+  </div>
+
+<script>
+  const TOTAL_STAGES = 10;
+  // Default prize for reaching N wins, from the 주사위 홀짝게임 poster.
+  // The host can change these in the ⚙️ editor; edits are kept in this browser.
+  const DEFAULT_PRIZES = [
+    { wins: 1,  name: '시그댄스',  icon: '🪩', color: '#2e8b2e' },
+    { wins: 2,  name: '쪽지셀카',  icon: '📸', color: '#16936a' },
+    { wins: 3,  name: '간단방셀',  sub: '2장', icon: '🖼️', color: '#3656c9' },
+    { wins: 4,  name: '역팬 200개', icon: '⭐', color: '#a8730f' },
+    { wins: 5,  name: '정성방셀',  sub: '7장', icon: '🎞️', color: '#e36414' },
+    { wins: 6,  name: '역팬 500개', icon: '🌟', color: '#d01f2a' },
+    { wins: 7,  name: '스쿼트 300번', icon: '🏋️', color: '#7b3fc4' },
+    { wins: 8,  name: '그림방셀',  icon: '🎨', color: '#e0407a' },
+    { wins: 9,  name: '카톡',      icon: '💬', color: '#9a6b00' },
+    { wins: 10, name: '전데',      icon: '💖👑', color: '#d61f69', grand: true },
+  ];
+  const PRIZE_STORE_KEY = 'diceGamePrizes.v2';
+  const ICON_MAX_PX = 96;      // uploaded icons are shrunk to this so they fit in localStorage
+
+  function loadPrizes() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(PRIZE_STORE_KEY));
+      if (Array.isArray(saved) && saved.length === DEFAULT_PRIZES.length) {
+        return DEFAULT_PRIZES.map((d, i) => ({ ...d, ...saved[i], wins: d.wins, grand: d.grand }));
+      }
+    } catch (e) { /* storage blocked or bad data: fall back to defaults */ }
+    return DEFAULT_PRIZES.map(d => ({ ...d }));
+  }
+
+  function savePrizes() {
+    try {
+      localStorage.setItem(PRIZE_STORE_KEY, JSON.stringify(prizes));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  let prizes = loadPrizes();
+  let stage = 1;
+  let locked = false;
+  let selectedGuess = null;
+
+  const ROTATIONS = {
+    1: { x: 0,   y: 0   },
+    2: { x: 0,   y: -90 },
+    3: { x: 90,  y: 0   },
+    4: { x: -90, y: 0   },
+    5: { x: 0,   y: 90  },
+    6: { x: 0,   y: 180 },
+  };
+
+  const DRAG_RATIO = 0.8;      // degrees of spin per pixel of mouse movement
+  const SPIN_FRICTION = 2.0;   // higher = the die stops sooner after the mouse stops
+  const MAX_SPIN_SPEED = 2500; // degrees per second
+  const WIN_LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q'];
+  const LOSE_IMG_COUNT = 28;
+  // Bump after replacing any image file so browsers stop showing the cached old one.
+  const IMG_VERSION = 2;
+  const IMG_REVEAL_MAX_MS = 600;  // longest wait for a new win/lose picture before showing it anyway
+  const ROLL_MS = 1500;        // dice tumble time; the result shows when it ends
+  document.documentElement.style.setProperty('--roll-duration', `${ROLL_MS}ms`);
+  // Camera angle for the dice; spin and lighting maths both account for it.
+  const VIEW_TILT = 'rotateX(-14deg) rotateY(-18deg)';
+  const VIEW_SCALE = 0.84;     // tilted die projects wider, so shrink it to keep the two apart
+  const VIEW = new DOMMatrix(VIEW_TILT);
+  const VIEW_INV = VIEW.inverse();
+  const LIGHT = (() => {       // from upper left, mostly in front
+    const v = [-0.3, -0.5, 0.8];
+    const len = Math.hypot(...v);
+    return v.map(c => c / len);
+  })();
+  const MAX_SHADE = 0.42;      // darkness of a face turned fully away from the light
+  const FACE_NORMALS = {
+    1: [0, 0, 1], 6: [0, 0, -1],
+    2: [1, 0, 0], 5: [-1, 0, 0],
+    3: [0, 1, 0], 4: [0, -1, 0],
+  };
+
+  function imgUrl(name) {
+    return `${name}.jpg?v=${IMG_VERSION}`;
+  }
+
+  // Changing src keeps painting the previous picture until the new one is decoded,
+  // so keep the element hidden until then. The token drops stale loads from earlier rounds.
+  function swapImage(img, src) {
+    const token = String(Math.random());
+    img.dataset.token = token;
+    img.style.visibility = 'hidden';
+    img.src = src;
+    const shown = () => {
+      if (img.dataset.token === token) img.style.visibility = '';
+    };
+    // broken file: show it anyway so the alt text appears;
+    // the timeout keeps a stalled decode from hiding the picture for good
+    Promise.race([img.decode().catch(() => {}), new Promise(r => setTimeout(r, IMG_REVEAL_MAX_MS))]).then(shown);
+  }
+
+  [
+    ...WIN_LETTERS,
+    ...Array.from({ length: LOSE_IMG_COUNT }, (_, i) => i + 1),
+  ].forEach(name => { new Image().src = imgUrl(name); });
+
+  const card = document.getElementById('card');
+  const title = document.getElementById('title');
+  const stageLabel = document.getElementById('stageLabel');
+  const cube1 = document.getElementById('cube1');
+  const cube2 = document.getElementById('cube2');
+  const pedestal1 = document.getElementById('pedestal1');
+  const pedestal2 = document.getElementById('pedestal2');
+  const sumLabel = document.getElementById('sumLabel');
+  const message = document.getElementById('message');
+  const btnOdd = document.getElementById('btnOdd');
+  const btnEven = document.getElementById('btnEven');
+  const diceRow = document.getElementById('diceRow');
+  const gameArea = document.getElementById('gameArea');
+  const overArea = document.getElementById('overArea');
+  const overMessage = document.getElementById('overMessage');
+  const overImg = document.getElementById('overImg');
+  const restartBtn = document.getElementById('restartBtn');
+  const winImg = document.getElementById('winImg');
+  const layout = document.getElementById('layout');
+  const prizeList = document.getElementById('prizeList');
+  const earned = document.getElementById('earned');
+  const grandCard = document.getElementById('grandCard');
+  const grandPrize = document.getElementById('grandPrize');
+  const grandIcon = document.getElementById('grandIcon');
+  const editBtn = document.getElementById('editBtn');
+
+  function esc(text) {
+    return String(text ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  }
+
+  function prizeLabel(p) {
+    return esc(p.name) + (p.sub ? ' ' + esc(p.sub) : '');
+  }
+
+  function iconHtml(p) {
+    return p.img ? `<img class="prize-img" src="${esc(p.img)}" alt="">` : esc(p.icon);
+  }
+
+  function prizeHtml(p) {
+    return `<span class="prize-badge">${p.wins}<small>승</small></span>`
+      + `<span class="prize-name">${esc(p.name)}${p.sub ? `<small>${esc(p.sub)}</small>` : ''}</span>`
+      + `<span class="prize-check">GET!</span>`
+      + `<span class="prize-icon">${iconHtml(p)}</span>`;
+  }
+
+  function prizeEl(p, tag = 'li') {
+    const el = document.createElement(tag);
+    el.className = 'prize' + (p.grand ? ' grand' : '');
+    el.style.setProperty('--c', p.color);
+    el.innerHTML = prizeHtml(p);
+    return el;
+  }
+
+  let prizeEls = [];
+  function renderPrizes() {
+    prizeList.replaceChildren();
+    prizeEls = prizes.map(p => prizeList.appendChild(prizeEl(p)));
+    const grand = prizes[prizes.length - 1];
+    grandPrize.textContent = grand.name;
+    // shrink long names so the final card still fits on screen
+    const len = [...grand.name].length;
+    grandPrize.style.setProperty('--grand-size', len <= 4 ? '6.5rem' : len <= 8 ? '3.6rem' : '2.4rem');
+    grandIcon.innerHTML = iconHtml(grand);
+  }
+  renderPrizes();
+
+  // wins = stages already cleared; the row for the next win is the current target.
+  function updateLadder(wins) {
+    prizeEls.forEach((el, i) => {
+      el.classList.remove('lost');
+      el.classList.toggle('done', i < wins);
+      el.classList.toggle('current', i === wins);
+    });
+  }
+
+  function newCubeState(el) {
+    const faces = Array.from(el.querySelectorAll('.face'), f => ({
+      el: f,
+      n: FACE_NORMALS[f.className.match(/face-(\d)/)[1]],
+    }));
+    el.parentElement.style.transform = `scale(${VIEW_SCALE}) ${VIEW_TILT}`;
+    return { el, faces, x: 0, y: 0, tilt: new DOMMatrix(), vx: 0, vy: 0, lastMove: 0, lastX: 0, lastY: 0 };
+  }
+  const cubeState1 = newCubeState(cube1);
+  const cubeState2 = newCubeState(cube2);
+
+  function rollDie() {
+    return Math.floor(Math.random() * 6) + 1;
+  }
+
+  function updateStageLabel() {
+    const p = prizes[stage - 1];
+    stageLabel.innerHTML = `스테이지 ${stage} / ${TOTAL_STAGES}`
+      + `<span class="next-prize" style="--prize-color:${esc(p.color)}">🎁 ${prizeLabel(p)}</span>`;
+    updateLadder(stage - 1);
+  }
+
+  // Reads the live (possibly mid-transition) transform so shading follows the CSS roll too.
+  function shadeCube(state) {
+    const t = getComputedStyle(state.el).transform;
+    const m = VIEW.multiply(t && t !== 'none' ? new DOMMatrix(t) : new DOMMatrix());
+    for (const f of state.faces) {
+      const p = m.transformPoint(new DOMPoint(f.n[0], f.n[1], f.n[2], 0));
+      const d = (p.x * LIGHT[0] + p.y * LIGHT[1] + p.z * LIGHT[2]) / Math.hypot(p.x, p.y, p.z);
+      f.el.style.setProperty('--shade', (MAX_SHADE * (1 - Math.max(0, d))).toFixed(3));
+    }
+  }
+
+  let shadeUntil = 0;
+  let shadeRunning = false;
+  function shadeFor(ms) {
+    shadeUntil = Math.max(shadeUntil, performance.now() + ms);
+    if (shadeRunning) return;
+    shadeRunning = true;
+    requestAnimationFrame(function tick(now) {
+      shadeCube(cubeState1);
+      shadeCube(cubeState2);
+      if (now < shadeUntil) {
+        requestAnimationFrame(tick);
+      } else {
+        shadeRunning = false;
+      }
+    });
+  }
+
+  function normalize(deg) {
+    return ((deg % 360) + 360) % 360;
+  }
+
+  function spinCubeTo(cubeEl, state, targetNumber) {
+    const target = ROTATIONS[targetNumber];
+    state.x += 360 * (2 + Math.floor(Math.random() * 2));
+    state.y += 360 * (2 + Math.floor(Math.random() * 2));
+    state.x += normalize(target.x) - normalize(state.x);
+    state.y += normalize(target.y) - normalize(state.y);
+    state.tilt = new DOMMatrix();
+    state.vx = 0;
+    state.vy = 0;
+    spinning.delete(state);
+    cubeEl.classList.remove('tilting');
+    applyCubeTransform(cubeEl, state);
+    shadeFor(ROLL_MS + 200);  // covers the roll transition
+  }
+
+  // Always matrix3d + rotateX + rotateY: the browser then eases the tilt back to upright
+  // while still animating the multi-turn roll on the rotate functions.
+  function applyCubeTransform(cubeEl, state) {
+    const m = Array.from(state.tilt.toFloat64Array()).join(',');
+    cubeEl.style.transform = `matrix3d(${m}) rotateX(${state.x}deg) rotateY(${state.y}deg)`;
+  }
+
+  function clampSpeed(v) {
+    return Math.max(-MAX_SPIN_SPEED, Math.min(MAX_SPIN_SPEED, v));
+  }
+
+  const spinning = new Set();
+  let lastFrame = null;
+
+  function spinStep(now) {
+    const dt = Math.min((now - lastFrame) / 1000, 0.05);
+    lastFrame = now;
+    const decay = Math.exp(-SPIN_FRICTION * dt);
+    for (const s of spinning) {
+      const speed = Math.hypot(s.vx, s.vy);
+      if (speed < 5) {
+        s.vx = 0;
+        s.vy = 0;
+        spinning.delete(s);
+        continue;
+      }
+      // Pre-multiply so the spin axis stays fixed to the screen, not to the die's current pose;
+      // conjugating by VIEW keeps it screen-fixed despite the camera tilt.
+      const spin = new DOMMatrix().rotateAxisAngle(s.vx, s.vy, 0, speed * dt);
+      s.tilt = VIEW_INV.multiply(spin).multiply(VIEW).multiply(s.tilt);
+      s.vx *= decay;
+      s.vy *= decay;
+      applyCubeTransform(s.el, s);
+      shadeCube(s);
+    }
+    if (spinning.size) {
+      requestAnimationFrame(spinStep);
+    } else {
+      lastFrame = null;
+    }
+  }
+
+  function flickDie(state, e) {
+    if (locked || !selectedGuess) return;
+    const dt = (e.timeStamp - state.lastMove) / 1000;
+    // Track the delta ourselves: movementX/Y units differ between browsers outside pointer lock.
+    const dx = e.clientX - state.lastX;
+    const dy = e.clientY - state.lastY;
+    state.lastMove = e.timeStamp;
+    state.lastX = e.clientX;
+    state.lastY = e.clientY;
+    if (dt <= 0 || dt > 0.1) return;
+    const targetVy = (dx / dt) * DRAG_RATIO;
+    const targetVx = (-dy / dt) * DRAG_RATIO;
+    state.vx = clampSpeed(state.vx + (targetVx - state.vx) * 0.5);
+    state.vy = clampSpeed(state.vy + (targetVy - state.vy) * 0.5);
+    state.el.classList.add('tilting');
+    spinning.add(state);
+    if (lastFrame === null) {
+      lastFrame = performance.now();
+      requestAnimationFrame(spinStep);
+    }
+  }
+
+
+  function selectGuess(guess) {
+    if (locked) return;
+    selectedGuess = guess;
+    btnOdd.classList.toggle('selected', guess === 'odd');
+    btnEven.classList.toggle('selected', guess === 'even');
+    diceRow.classList.add('ready');
+  }
+
+  function rollDice() {
+    if (locked || !selectedGuess) return;
+    locked = true;
+    btnOdd.disabled = true;
+    btnEven.disabled = true;
+    editBtn.disabled = true;
+    diceRow.classList.remove('ready');
+    diceRow.classList.add('rolling');
+    pedestal1.classList.remove('bounce');
+    pedestal2.classList.remove('bounce');
+    message.textContent = '';
+    message.className = 'message';
+    winImg.classList.add('invisible');
+    sumLabel.innerHTML = '굴리는 중... <span class="en">Rolling...</span>';
+
+    const a = rollDie();
+    const b = rollDie();
+    spinCubeTo(cube1, cubeState1, a);
+    spinCubeTo(cube2, cubeState2, b);
+
+    setTimeout(() => {
+      pedestal1.classList.add('bounce');
+      pedestal2.classList.add('bounce');
+      const sum = a + b;
+      const isOdd = sum % 2 === 1;
+      const result = isOdd ? 'odd' : 'even';
+      const win = result === selectedGuess;
+
+      sumLabel.innerHTML = `이번 라운드 합계: ${sum} (${isOdd ? '홀수' : '짝수'}) <span class="en">Sum this round: ${sum} (${isOdd ? 'Odd' : 'Even'})</span>`;
+
+      if (win) {
+        const won = prizes[stage - 1];
+        message.innerHTML = `정답! ${won.wins}승 달성 · 🎁 ${prizeLabel(won)} GET! <span class="en">Correct!</span>`;
+        updateLadder(stage);
+        const wonEl = prizeEls[stage - 1];
+        wonEl.classList.remove('just-won');
+        void wonEl.offsetWidth;  // restart the animation
+        wonEl.classList.add('just-won');
+        message.classList.add('win');
+        sumLabel.classList.add('compact');
+        const winLetter = WIN_LETTERS[Math.floor(Math.random() * WIN_LETTERS.length)];
+        swapImage(winImg, imgUrl(winLetter));
+        winImg.classList.remove('invisible');
+        setTimeout(() => {
+          if (stage >= TOTAL_STAGES) {
+            showFinalWin();
+          } else {
+            stage += 1;
+            updateStageLabel();
+            resetRoundControls();
+          }
+        }, 3000);
+      } else {
+        message.innerHTML = '틀렸습니다. 게임 종료! <span class="en">Wrong guess. Game over!</span>';
+        message.classList.add('lose');
+        prizeEls.forEach(el => {
+          if (el.classList.contains('done')) el.classList.replace('done', 'lost');
+        });
+        setTimeout(() => showLose(stage), 1400);
+      }
+    }, ROLL_MS);
+  }
+
+  function resetRoundControls() {
+    selectedGuess = null;
+    btnOdd.classList.remove('selected');
+    btnEven.classList.remove('selected');
+    btnOdd.disabled = false;
+    btnEven.disabled = false;
+    diceRow.classList.remove('ready', 'rolling');
+    sumLabel.classList.remove('compact');
+    sumLabel.innerHTML = '홀수 또는 짝수를 고른 후 주사위를 클릭해서 굴리세요 <span class="en">Pick Odd or Even, then click the dice to roll</span>';
+    message.textContent = '';
+    message.className = 'message';
+    winImg.classList.add('invisible');
+    editBtn.disabled = false;
+    locked = false;
+  }
+
+  function showLose(lostAtStage) {
+    title.classList.add('hidden');
+    stageLabel.classList.add('hidden');
+    gameArea.classList.add('hidden');
+    overArea.classList.remove('hidden');
+    restartBtn.classList.remove('hidden');
+    overMessage.innerHTML = `스테이지 ${lostAtStage}에서 패배했습니다! <span class="en">You lost at Stage ${lostAtStage}!</span>`;
+    overMessage.className = 'message lose';
+    const randomImg = Math.floor(Math.random() * LOSE_IMG_COUNT) + 1;
+    swapImage(overImg, imgUrl(randomImg));
+    overImg.classList.remove('hidden');
+    grandCard.classList.add('hidden');
+    showLostPrizes(lostAtStage - 1);
+  }
+
+  // Rule: losing a round forfeits every prize collected so far.
+  function showLostPrizes(wins) {
+    earned.innerHTML = '';
+    if (wins === 0) {
+      earned.innerHTML = '<div class="earned-none">선물 없음 😢 다시 도전!</div>';
+      return;
+    }
+    const cap = document.createElement('div');
+    cap.className = 'earned-caption';
+    cap.innerHTML = `💔 누적 선물 ${wins}개 모두 소멸! <span class="en">All prizes lost</span>`;
+    const chips = document.createElement('div');
+    chips.className = 'lost-chips';
+    for (const p of prizes.slice(0, wins)) {
+      const chip = document.createElement('span');
+      chip.className = 'lost-chip';
+      chip.style.setProperty('--c', p.color);
+      chip.textContent = `${p.wins}승 ${p.name}${p.sub ? ' ' + p.sub : ''}`;
+      chips.appendChild(chip);
+    }
+    earned.append(cap, chips);
+  }
+
+  function heartRain() {
+    const rain = document.createElement('div');
+    rain.className = 'heart-rain';
+    const icons = ['💖', '💗', '💕', '✨', '👑', '🎲'];
+    for (let i = 0; i < 40; i++) {
+      const h = document.createElement('span');
+      h.textContent = icons[i % icons.length];
+      h.style.left = `${Math.random() * 100}vw`;
+      h.style.fontSize = `${18 + Math.random() * 26}px`;
+      h.style.animationDuration = `${2.8 + Math.random() * 2.5}s`;
+      h.style.animationDelay = `${Math.random() * 2}s`;
+      rain.appendChild(h);
+    }
+    document.body.appendChild(rain);
+    setTimeout(() => rain.remove(), 7000);
+  }
+
+  function showFinalWin() {
+    title.classList.add('hidden');
+    stageLabel.classList.add('hidden');
+    gameArea.classList.add('hidden');
+    overArea.classList.remove('hidden');
+    restartBtn.classList.remove('hidden');
+    overMessage.innerHTML = `축하합니다! ${TOTAL_STAGES}개 스테이지를 모두 클리어했습니다! <span class="en">Congratulations! You cleared all ${TOTAL_STAGES} stages!</span>`;
+    overMessage.className = 'message win';
+    overImg.classList.add('hidden');
+    earned.innerHTML = '';
+    grandCard.classList.remove('hidden');
+    heartRain();
+  }
+
+  function restart() {
+    stage = 1;
+    updateStageLabel();
+    resetRoundControls();
+    title.classList.remove('hidden');
+    stageLabel.classList.remove('hidden');
+    gameArea.classList.remove('hidden');
+    overArea.classList.add('hidden');
+    restartBtn.classList.add('hidden');
+  }
+
+  // ---------- prize editor ----------
+  const editor = document.getElementById('editor');
+  const editorForm = document.getElementById('editorForm');
+  const editorRows = document.getElementById('editorRows');
+  const editorNote = document.getElementById('editorNote');
+  const emojiPalette = document.getElementById('emojiPalette');
+  const PALETTE = ['🎁', '💖', '💌', '📸', '🖼️', '🎞️', '⭐', '🌟', '👑', '💎', '🪩', '💃', '🎤', '🎵',
+    '🏋️', '🎨', '💬', '📞', '🍰', '🍫', '☕', '🧸', '🌹', '💐', '🎀', '💍', '🍀', '🎮', '✍️', '💋'];
+  let draft = [];
+  let activeRow = 0;
+
+  for (const e of PALETTE) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = e;
+    b.addEventListener('click', () => {
+      draft[activeRow].icon = e;
+      draft[activeRow].img = '';
+      buildEditorRows();
+    });
+    emojiPalette.appendChild(b);
+  }
+
+  // Shrinks an uploaded picture to a small PNG data URL.
+  function readIcon(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, ICON_MAX_PX / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * scale);
+        c.height = Math.round(img.height * scale);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/png'));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+      img.src = url;
+    });
+  }
+
+  // shade < 0 mixes toward black, > 0 toward white, as a percentage.
+  const SHADE_RANGE = 60;
+  function shadeColor(hex, shade) {
+    const n = parseInt(hex.slice(1), 16);
+    const target = shade < 0 ? 0 : 255;
+    const t = Math.abs(shade) / 100;
+    return '#' + [16, 8, 0]
+      .map(bit => Math.round(((n >> bit) & 255) * (1 - t) + target * t).toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  function editable(p) {
+    return { sub: '', img: '', baseColor: p.color, shade: 0, ...p };
+  }
+
+  function buildEditorRows() {
+    closeColorPop();
+    editorRows.replaceChildren();
+    draft.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.className = 'ed-row' + (i === activeRow ? ' active' : '');
+      row.style.setProperty('--c', p.color);
+      row.innerHTML = `
+        <span class="ed-badge">${p.wins}승</span>
+        <input type="text" class="ed-name" maxlength="20" placeholder="선물 이름 Prize" value="${esc(p.name)}">
+        <input type="text" class="ed-sub" maxlength="8" placeholder="수량" title="수량 (선택) · e.g. 2장" value="${esc(p.sub)}">
+        <input type="text" class="ed-icon" maxlength="8" placeholder="🎁" value="${p.img ? '' : esc(p.icon)}" title="이모지 아이콘">
+        <span class="ed-tools">
+          <span class="ed-preview">${iconHtml(p)}</span>
+          <button type="button" class="ed-btn ghost ed-upload">🖼️ 이미지</button>
+          ${p.img ? '<button type="button" class="ed-btn ghost ed-clear" title="이미지 삭제">✕</button>' : ''}
+          <input type="file" accept="image/*" hidden>
+        </span>
+        <button type="button" class="ed-color-btn" title="색상 Color" aria-label="색상 선택"><span class="ed-swatch"></span></button>`;
+      const q = sel => row.querySelector(sel);
+      row.addEventListener('focusin', () => {
+        if (activeRow === i) return;
+        editorRows.children[activeRow]?.classList.remove('active');
+        activeRow = i;
+        row.classList.add('active');
+      });
+      q('.ed-name').addEventListener('input', e => { p.name = e.target.value; });
+      q('.ed-sub').addEventListener('input', e => { p.sub = e.target.value; });
+      q('.ed-icon').addEventListener('input', e => {
+        p.icon = e.target.value;
+        p.img = '';
+        q('.ed-preview').innerHTML = iconHtml(p);
+      });
+      q('.ed-color-btn').addEventListener('click', e => toggleColorPop(i, e.currentTarget));
+      const file = q('input[type=file]');
+      q('.ed-upload').addEventListener('click', () => { activeRow = i; file.click(); });
+      file.addEventListener('change', async () => {
+        if (!file.files[0]) return;
+        try {
+          p.img = await readIcon(file.files[0]);
+          buildEditorRows();
+        } catch (e) {
+          editorNote.textContent = '이미지를 읽을 수 없어요.';
+        }
+      });
+      q('.ed-clear')?.addEventListener('click', () => { p.img = ''; buildEditorRows(); });
+      editorRows.appendChild(row);
+    });
+  }
+
+  // ---------- color picker pop-up ----------
+  const colorPop = document.getElementById('colorPop');
+  const cpPresets = document.getElementById('cpPresets');
+  const cpGrid = document.getElementById('cpGrid');
+  const cpShade = document.getElementById('cpShade');
+  const cpHex = document.getElementById('cpHex');
+  const cpNative = document.getElementById('cpNative');
+  const PRESET_COLORS = ['#ff2a00', '#ff9500', '#ffee00', '#00e600', '#00ffff', '#0033ff',
+    '#ff40ff', '#8e1f9a', '#a87a4a', '#ffffff', '#999999', '#000000'];
+  const GRID_HUES = [192, 216, 252, 276, 330, 4, 20, 34, 44, 54, 66, 96];
+  const GRID_LIGHTNESS = [14, 20, 27, 35, 44, 53, 63, 74, 87];  // dark to light, one grid row each
+  let popRow = -1;
+  let popBtn = null;
+
+  function hslHex(h, sat, l) {
+    sat /= 100; l /= 100;
+    const k = n => (n + h / 30) % 12;
+    const a = sat * Math.min(l, 1 - l);
+    const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+    return '#' + [f(0), f(8), f(4)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('');
+  }
+
+  function addCell(parent, hex) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'cp-cell';
+    b.dataset.hex = hex;
+    b.title = hex;
+    b.style.setProperty('--cell', hex);
+    b.addEventListener('click', () => {
+      const p = draft[popRow];
+      p.baseColor = hex;
+      p.shade = 0;
+      cpShade.value = 0;
+      applyPopColor();
+    });
+    parent.appendChild(b);
+  }
+  PRESET_COLORS.forEach(hex => addCell(cpPresets, hex));
+  for (let i = 0; i < 12; i++) addCell(cpGrid, hslHex(0, 0, 100 - i * (100 / 11)));  // grays
+  for (const l of GRID_LIGHTNESS) {
+    for (const h of GRID_HUES) addCell(cpGrid, hslHex(h, l > 80 ? 80 : 92, l));
+  }
+  cpShade.min = -SHADE_RANGE;
+  cpShade.max = SHADE_RANGE;
+
+  function applyPopColor() {
+    const p = draft[popRow];
+    p.color = shadeColor(p.baseColor, p.shade);
+    editorRows.children[popRow].style.setProperty('--c', p.color);
+    colorPop.style.setProperty('--pop-c', p.color);
+    cpShade.style.setProperty('--shade-dark', shadeColor(p.baseColor, -SHADE_RANGE));
+    cpShade.style.setProperty('--shade-base', p.baseColor);
+    cpShade.style.setProperty('--shade-light', shadeColor(p.baseColor, SHADE_RANGE));
+    cpHex.textContent = p.color.toUpperCase();
+    cpNative.value = p.baseColor;
+    for (const c of colorPop.querySelectorAll('.cp-cell')) {
+      c.classList.toggle('selected', c.dataset.hex === p.baseColor.toLowerCase());
+    }
+  }
+
+  function placeColorPop() {
+    const r = popBtn.getBoundingClientRect();
+    const w = colorPop.offsetWidth;
+    const h = colorPop.offsetHeight;
+    const left = Math.max(8, Math.min(r.right - w, innerWidth - w - 8));
+    let top = r.bottom + 6;
+    if (top + h > innerHeight - 8) top = Math.max(8, r.top - h - 6);
+    colorPop.style.left = `${left}px`;
+    colorPop.style.top = `${top}px`;
+  }
+
+  function closeColorPop() {
+    colorPop.hidden = true;
+    popBtn?.classList.remove('open');
+    popRow = -1;
+    popBtn = null;
+  }
+
+  function toggleColorPop(i, btn) {
+    if (popRow === i) { closeColorPop(); return; }
+    closeColorPop();
+    popRow = i;
+    popBtn = btn;
+    btn.classList.add('open');
+    cpShade.value = draft[i].shade;
+    applyPopColor();
+    colorPop.hidden = false;
+    placeColorPop();
+  }
+
+  cpShade.addEventListener('input', () => {
+    draft[popRow].shade = Number(cpShade.value);
+    applyPopColor();
+  });
+  cpShade.addEventListener('dblclick', () => {  // double-click puts the slider back to the picked color
+    draft[popRow].shade = 0;
+    cpShade.value = 0;
+    applyPopColor();
+  });
+  document.getElementById('cpMore').addEventListener('click', () => {
+    try { cpNative.showPicker(); } catch (e) { cpNative.click(); }
+  });
+  cpNative.addEventListener('input', () => {
+    if (popRow < 0) return;
+    draft[popRow].baseColor = cpNative.value;
+    draft[popRow].shade = 0;
+    cpShade.value = 0;
+    applyPopColor();
+  });
+  // close on a click outside, on scroll, and on Esc (without also closing the editor)
+  editor.addEventListener('pointerdown', (e) => {
+    if (popRow >= 0 && !colorPop.contains(e.target) && !popBtn.contains(e.target)) closeColorPop();
+  });
+  editorRows.addEventListener('scroll', closeColorPop);
+  window.addEventListener('resize', () => { if (popRow >= 0) placeColorPop(); });
+  editor.addEventListener('cancel', (e) => {
+    if (popRow >= 0) {
+      e.preventDefault();
+      closeColorPop();
+    }
+  });
+  editor.addEventListener('close', closeColorPop);
+
+  function openEditor() {
+    if (locked) return;
+    draft = prizes.map(editable);
+    activeRow = 0;
+    editorNote.textContent = '';
+    buildEditorRows();
+    editor.showModal();
+  }
+
+  editBtn.addEventListener('click', openEditor);
+  document.getElementById('cancelEdit').addEventListener('click', () => editor.close());
+  document.getElementById('resetPrizes').addEventListener('click', () => {
+    if (!confirm('기본 선물로 되돌릴까요? (Reset to the default prizes?)')) return;
+    draft = DEFAULT_PRIZES.map(editable);
+    buildEditorRows();
+  });
+  editorForm.addEventListener('submit', (e) => {
+    const empty = draft.findIndex(p => !p.name.trim());
+    if (empty >= 0) {
+      e.preventDefault();
+      editorNote.textContent = `${empty + 1}승 선물 이름을 입력해 주세요.`;
+      editorRows.children[empty].querySelector('.ed-name').focus();
+      return;
+    }
+    prizes = draft.map(p => ({ ...p, name: p.name.trim(), sub: p.sub.trim(), icon: p.icon.trim() || '🎁' }));
+    if (!savePrizes()) {
+      alert('이 브라우저에 저장하지 못했어요. 새로고침하면 원래대로 돌아가요.\n(Could not save in this browser.)');
+    }
+    renderPrizes();
+    updateStageLabel();
+  });
+
+  btnOdd.addEventListener('click', () => selectGuess('odd'));
+  btnEven.addEventListener('click', () => selectGuess('even'));
+  // Pointer events cover mouse, touch and pen. A touch drag also ends in a click,
+  // so swallow that click to keep a finger spin from rolling the dice.
+  let touchDragged = false;
+  let touchStart = null;
+  diceRow.addEventListener('click', () => {
+    if (touchDragged) {
+      touchDragged = false;
+      return;
+    }
+    rollDice();
+  });
+  for (const [pedestal, state] of [[pedestal1, cubeState1], [pedestal2, cubeState2]]) {
+    pedestal.addEventListener('pointerdown', (e) => {
+      state.lastMove = e.timeStamp;
+      state.lastX = e.clientX;
+      state.lastY = e.clientY;
+      touchDragged = false;
+      touchStart = e.pointerType === 'mouse' ? null : { x: e.clientX, y: e.clientY };
+    });
+    pedestal.addEventListener('pointermove', (e) => {
+      if (touchStart && Math.hypot(e.clientX - touchStart.x, e.clientY - touchStart.y) > 10) {
+        touchDragged = true;
+      }
+      flickDie(state, e);
+    });
+  }
+  diceRow.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      rollDice();
+    }
+  });
+  restartBtn.addEventListener('click', restart);
+
+  const PAGE_MARGIN = 16;
+  function fitCardToWindow() {
+    const scale = Math.min(
+      1,
+      (window.innerWidth - PAGE_MARGIN * 2) / layout.offsetWidth,
+      (window.innerHeight - PAGE_MARGIN * 2) / layout.offsetHeight,
+    );
+    layout.style.transform = scale < 1 ? `scale(${scale})` : '';
+  }
+  window.addEventListener('resize', fitCardToWindow);
+  fitCardToWindow();
+  shadeCube(cubeState1);
+  shadeCube(cubeState2);
+
+  updateStageLabel();
+</script>
+</body>
+</html>
