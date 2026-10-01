@@ -105,11 +105,13 @@
     flex: 1;
     display: flex;
     flex-direction: column;
+    justify-content: center;  /* short ladders (fewer stages) sit in the middle */
     gap: 6px;
   }
   .prize {
     --c: #888;
     flex: 1;
+    max-height: 76px;  /* rows stop growing when there are only a few stages */
     display: flex;
     align-items: center;
     gap: 10px;
@@ -205,6 +207,7 @@
   }
   .prize.grand {
     flex: 1.35;
+    max-height: 100px;
     background: linear-gradient(100deg, #ffe3f0, #fff4c9, #e3f4ff, #f1e3ff, #ffe3f0);
   }
   /* grand prize follows its editor color too, with a lighter shine across the name */
@@ -288,6 +291,31 @@
   .editor-head h2 { margin: 0 0 4px; font-family: var(--title-font); font-weight: normal; font-size: 1.6rem; color: #d21c6a; }
   .editor-head p { margin: 0 0 10px; font-size: 0.88rem; line-height: 1.45; opacity: 0.85; }
   .editor-head p .en { display: block; margin: 0; }
+  .game-settings {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 18px;
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    background: #fff;
+    border: 1.5px solid #f7c6d8;
+    border-radius: 12px;
+  }
+  .game-settings label { display: flex; align-items: center; gap: 6px; }
+  .game-settings .en { margin-left: 0; font-size: 0.85em; }
+  .game-settings select {
+    padding: 5px 8px;
+    font: inherit;
+    font-weight: normal;
+    color: var(--text);
+    background: #fffafc;
+    border: 1.5px solid #ecd3de;
+    border-radius: 8px;
+  }
+  .set-odds { font-size: 0.8rem; font-weight: normal; opacity: 0.75; }
   .emoji-palette { display: flex; flex-wrap: wrap; gap: 4px; }
   .emoji-palette button {
     width: 36px; height: 36px; padding: 0;
@@ -694,7 +722,7 @@
   .face-5 .pip:nth-child(1), .face-5 .pip:nth-child(3), .face-5 .pip:nth-child(5), .face-5 .pip:nth-child(7), .face-5 .pip:nth-child(9) { opacity: 1; }
   .face-6 .pip:nth-child(1), .face-6 .pip:nth-child(3), .face-6 .pip:nth-child(4), .face-6 .pip:nth-child(6), .face-6 .pip:nth-child(7), .face-6 .pip:nth-child(9) { opacity: 1; }
 
-  /* stages TENSE_FROM..10: --tense runs 0 -> 1 and drives the glow and the vignette */
+  /* tension stages (settings.tenseFrom..last): --tense runs 0 -> 1 and drives the glow and the vignette */
   .card.tense {
     border-color: color-mix(in srgb, #ff6a3d calc(var(--tense) * 100%), var(--panel-border));
     animation: tenseGlow 1.8s ease-in-out infinite;
@@ -1004,6 +1032,11 @@
         <h2>🎁 선물 편집 <span class="en">Edit prizes</span></h2>
         <p>각 승수의 선물 이름과 아이콘을 입력하세요. 아이콘은 이모지를 쓰거나 이미지를 올릴 수 있어요.
           <span class="en">Enter a name and icon for each win count. Use an emoji or upload an image.</span></p>
+        <div class="game-settings">
+          <label>🎯 스테이지 수 <span class="en">Stages</span> <select id="setStages"></select></label>
+          <label>🔥 긴장감 <span class="en">Tension</span> <select id="setTense"></select></label>
+          <span class="set-odds" id="setOdds"></span>
+        </div>
         <div class="emoji-palette" id="emojiPalette" title="클릭하면 선택한 칸에 들어가요"></div>
       </div>
       <div class="editor-rows" id="editorRows"></div>
@@ -1039,7 +1072,7 @@
     <img id="overImg" class="result-img" src="" alt="Stage result">
     <div class="grand-card hidden" id="grandCard">
       <div class="grand-crown">👑</div>
-      <div class="grand-wins">10승 달성!</div>
+      <div class="grand-wins" id="grandWins"></div>
       <div class="grand-prize" id="grandPrize"></div>
       <div class="grand-heart" id="grandIcon"></div>
     </div>
@@ -1051,7 +1084,51 @@
   </div>
 
 <script>
-  const TOTAL_STAGES = 10;
+  // Host settings from the ⚙️ editor. The ladder always ends on the grand prize,
+  // so N stages use prizes 1..N-1 plus the grand prize as the Nth.
+  const STAGE_CHOICES = [3, 4, 5, 6, 7, 8, 9, 10];
+  const DEFAULT_SETTINGS = { stages: 10, tenseFrom: 7 };  // tenseFrom 0 = no tension stages
+  const SETTINGS_STORE_KEY = 'diceGameSettings.v1';
+
+  function clampTense(from, stages) {
+    from = Number(from) || 0;
+    return from <= 0 ? 0 : Math.min(from, stages);
+  }
+
+  function loadSettings() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SETTINGS_STORE_KEY));
+      if (saved && STAGE_CHOICES.includes(saved.stages)) {
+        return { stages: saved.stages, tenseFrom: clampTense(saved.tenseFrom, saved.stages) };
+      }
+    } catch (e) { /* storage blocked or bad data: fall back to defaults */ }
+    return { ...DEFAULT_SETTINGS };
+  }
+
+  function saveSettings() {
+    try {
+      localStorage.setItem(SETTINGS_STORE_KEY, JSON.stringify(settings));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  let settings = loadSettings();
+
+  function isTense(s) {
+    return settings.tenseFrom > 0 && s >= settings.tenseFrom;
+  }
+
+  // 0 -> 1 across the tension stages; 0 outside them
+  function tenseLevel(s) {
+    if (!isTense(s)) return 0;
+    return (s - settings.tenseFrom + 1) / (settings.stages - settings.tenseFrom + 1);
+  }
+
+  function ladderPrizes(list, stages) {
+    return [...list.slice(0, stages - 1), { ...list[list.length - 1], wins: stages }];
+  }
   // Default prize for reaching N wins, from the 주사위 홀짝게임 poster.
   // The host can change these in the ⚙️ editor; edits are kept in this browser.
   const DEFAULT_PRIZES = [
@@ -1111,8 +1188,6 @@
   const IMG_VERSION = 2;
   const IMG_REVEAL_MAX_MS = 600;  // longest wait for a new win/lose picture before showing it anyway
   const ROLL_MS = 1500;        // dice tumble time; the result shows when it ends
-  // From this stage on the dice roll slower and land one at a time, with a heartbeat glow.
-  const TENSE_FROM = 7;
   const CASH_OUT_CONFIRM_MS = 3000;  // how long the "tap again to confirm" state waits
   const SUM_HINT = '홀수 또는 짝수를 고른 후 주사위를 클릭해서 굴리세요 <span class="en">Pick Odd or Even, then click the dice to roll</span>';
   // Camera angle for the dice; spin and lighting maths both account for it.
@@ -1193,6 +1268,7 @@
   const grandCard = document.getElementById('grandCard');
   const grandPrize = document.getElementById('grandPrize');
   const grandIcon = document.getElementById('grandIcon');
+  const grandWins = document.getElementById('grandWins');
   const editBtn = document.getElementById('editBtn');
   const cashOutBtn = document.getElementById('cashOutBtn');
   const rollLogList = document.getElementById('rollLogList');
@@ -1225,11 +1301,14 @@
     return el;
   }
 
+  let ladder = [];    // the prizes in play: one per stage, grand prize last
   let prizeEls = [];
   function renderPrizes() {
+    ladder = ladderPrizes(prizes, settings.stages);
     prizeList.replaceChildren();
-    prizeEls = prizes.map(p => prizeList.appendChild(prizeEl(p)));
-    const grand = prizes[prizes.length - 1];
+    prizeEls = ladder.map(p => prizeList.appendChild(prizeEl(p)));
+    const grand = ladder[ladder.length - 1];
+    grandWins.textContent = `${grand.wins}승 달성!`;
     grandPrize.textContent = grand.name;
     // shrink long names so the final card still fits on screen
     const len = [...grand.name].length;
@@ -1264,23 +1343,24 @@
   }
 
   function updateStageLabel() {
-    const p = prizes[stage - 1];
-    const tense = stage >= TENSE_FROM;
-    const name = stage === TOTAL_STAGES ? '🔥 마지막 스테이지' : tense ? '🔥 스테이지' : '스테이지';
-    stageLabel.innerHTML = `${name} ${stage} / ${TOTAL_STAGES}`
+    const p = ladder[stage - 1];
+    const tense = isTense(stage);
+    const last = stage === settings.stages;
+    const name = last && tense ? '🔥 마지막 스테이지' : tense ? '🔥 스테이지' : '스테이지';
+    stageLabel.innerHTML = `${name} ${stage} / ${settings.stages}`
       + `<span class="next-prize" style="--prize-color:${esc(p.color)}">🎁 ${prizeLabel(p)}</span>`;
     card.classList.toggle('tense', tense);
-    const level = tense ? (stage - TENSE_FROM + 1) / (TOTAL_STAGES - TENSE_FROM + 1) : 0;
-    document.documentElement.style.setProperty('--tense', level.toFixed(2));
+    document.documentElement.style.setProperty('--tense', tenseLevel(stage).toFixed(2));
     updateLadder(stage - 1);
   }
 
-  // Tense stages roll longer, and the second die lands well after the first.
+  // Tense stages roll longer, and the second die lands well after the first;
+  // both grow toward the last stage (2.9s and 4.4s there).
   function rollTiming(s) {
-    if (s < TENSE_FROM) return { first: ROLL_MS, second: ROLL_MS };
-    const level = s - TENSE_FROM + 1;
-    const first = ROLL_MS + level * 350;
-    return { first, second: first + 500 + level * 250 };
+    if (!isTense(s)) return { first: ROLL_MS, second: ROLL_MS };
+    const level = tenseLevel(s);
+    const first = ROLL_MS + Math.round(level * 1400);
+    return { first, second: first + 500 + Math.round(level * 1000) };
   }
 
   // Reads the live (possibly mid-transition) transform so shading follows the CSS roll too.
@@ -1426,7 +1506,7 @@
     const t = rollTiming(stage);
     spinCubeTo(cube1, cubeState1, a, t.first);
     spinCubeTo(cube2, cubeState2, b, t.second);
-    setTension(stage >= TENSE_FROM);
+    setTension(isTense(stage));
 
     setTimeout(() => {
       pedestal1.classList.add('bounce');
@@ -1455,7 +1535,7 @@
     sumLabel.innerHTML = `이번 라운드 합계: ${sum} (${isOdd ? '홀수' : '짝수'}) <span class="en">Sum this round: ${sum} (${isOdd ? 'Odd' : 'Even'})</span>`;
 
     if (win) {
-      const won = prizes[stage - 1];
+      const won = ladder[stage - 1];
       message.innerHTML = `정답! ${won.wins}승 달성 · 🎁 ${prizeLabel(won)} GET! <span class="en">Correct!</span>`;
       updateLadder(stage);
       const wonEl = prizeEls[stage - 1];
@@ -1467,7 +1547,7 @@
       swapImage(winImg, randomWinImg());
       winImg.classList.remove('invisible');
       setTimeout(() => {
-        if (stage >= TOTAL_STAGES) {
+        if (stage >= settings.stages) {
           showFinalWin();
         } else {
           stage += 1;
@@ -1607,7 +1687,7 @@
       : `💔 누적 선물 ${wins}개 모두 소멸! <span class="en">All prizes lost</span>`;
     const chips = document.createElement('div');
     chips.className = 'prize-chips';
-    for (const p of prizes.slice(0, wins)) {
+    for (const p of ladder.slice(0, wins)) {
       const chip = document.createElement('span');
       chip.className = 'prize-chip ' + (kept ? 'kept' : 'lost');
       chip.style.setProperty('--c', p.color);
@@ -1636,7 +1716,7 @@
 
   function showFinalWin() {
     showOverScreen(
-      `축하합니다! ${TOTAL_STAGES}개 스테이지를 모두 클리어했습니다! <span class="en">Congratulations! You cleared all ${TOTAL_STAGES} stages!</span>`,
+      `축하합니다! ${settings.stages}개 스테이지를 모두 클리어했습니다! <span class="en">Congratulations! You cleared all ${settings.stages} stages!</span>`,
       'win',
       '',
     );
@@ -1665,7 +1745,41 @@
   const PALETTE = ['🎁', '💖', '💌', '📸', '🖼️', '🎞️', '⭐', '🌟', '👑', '💎', '🪩', '💃', '🎤', '🎵',
     '🏋️', '🎨', '💬', '📞', '🍰', '🍫', '☕', '🧸', '🌹', '💐', '🎀', '💍', '🍀', '🎮', '✍️', '💋'];
   let draft = [];
+  let draftSettings = { ...DEFAULT_SETTINGS };
   let activeRow = 0;
+  let rowEls = [];   // editor row element per draft index (rows past the stage count are left out)
+  const setStages = document.getElementById('setStages');
+  const setTense = document.getElementById('setTense');
+  const setOdds = document.getElementById('setOdds');
+
+  for (const n of STAGE_CHOICES) setStages.add(new Option(`${n} 스테이지`, n));
+
+  // draft indices shown for the chosen stage count: the first N-1 prizes, then the grand prize
+  function editorIndices() {
+    const n = draftSettings.stages;
+    return [...Array.from({ length: n - 1 }, (_, i) => i), draft.length - 1];
+  }
+
+  function syncSettingsForm() {
+    const { stages, tenseFrom } = draftSettings;
+    setStages.value = stages;
+    setTense.replaceChildren(new Option('끄기 · Off', 0));
+    for (let k = 1; k <= stages; k++) setTense.add(new Option(`${k} 스테이지부터`, k));
+    setTense.value = tenseFrom;
+    setOdds.textContent = `전부 클리어 확률 1/${2 ** stages} (${(100 / 2 ** stages).toFixed(stages > 6 ? 2 : 1)}%)`;
+    editorNote.textContent = stages !== settings.stages && stage > 1
+      ? '스테이지 수를 바꾸면 게임이 처음부터 다시 시작돼요.' : '';
+  }
+
+  setStages.addEventListener('change', () => {
+    draftSettings.stages = Number(setStages.value);
+    draftSettings.tenseFrom = clampTense(draftSettings.tenseFrom, draftSettings.stages);
+    syncSettingsForm();
+    buildEditorRows();
+  });
+  setTense.addEventListener('change', () => {
+    draftSettings.tenseFrom = Number(setTense.value);
+  });
 
   for (const e of PALETTE) {
     const b = document.createElement('button');
@@ -1716,12 +1830,17 @@
   function buildEditorRows() {
     closeColorPop();
     editorRows.replaceChildren();
-    draft.forEach((p, i) => {
+    rowEls = [];
+    const shown = editorIndices();
+    if (!shown.includes(activeRow)) activeRow = shown[0];
+    for (const i of shown) {
+      const p = draft[i];
       const row = document.createElement('div');
+      rowEls[i] = row;
       row.className = 'ed-row' + (i === activeRow ? ' active' : '');
       row.style.setProperty('--c', p.color);
       row.innerHTML = `
-        <span class="ed-badge">${p.wins}승</span>
+        <span class="ed-badge">${winsLabel(i)}승</span>
         <input type="text" class="ed-name" maxlength="20" placeholder="선물 이름 Prize" value="${esc(p.name)}">
         <input type="text" class="ed-sub" maxlength="8" placeholder="수량" title="수량 (선택) · e.g. 2장" value="${esc(p.sub)}">
         <input type="text" class="ed-icon" maxlength="16" placeholder="🎁" value="${p.img ? '' : esc(p.icon)}" title="이모지 아이콘">
@@ -1735,7 +1854,7 @@
       const q = sel => row.querySelector(sel);
       row.addEventListener('focusin', () => {
         if (activeRow === i) return;
-        editorRows.children[activeRow]?.classList.remove('active');
+        rowEls[activeRow]?.classList.remove('active');
         activeRow = i;
         row.classList.add('active');
       });
@@ -1760,7 +1879,12 @@
       });
       q('.ed-clear')?.addEventListener('click', () => { p.img = ''; buildEditorRows(); });
       editorRows.appendChild(row);
-    });
+    }
+  }
+
+  // the grand prize is always won on the last stage
+  function winsLabel(i) {
+    return i === draft.length - 1 ? draftSettings.stages : draft[i].wins;
   }
 
   // ---------- color picker pop-up ----------
@@ -1812,7 +1936,7 @@
   function applyPopColor() {
     const p = draft[popRow];
     p.color = shadeColor(p.baseColor, p.shade);
-    editorRows.children[popRow].style.setProperty('--c', p.color);
+    rowEls[popRow].style.setProperty('--c', p.color);
     colorPop.style.setProperty('--pop-c', p.color);
     cpShade.style.setProperty('--shade-dark', shadeColor(p.baseColor, -SHADE_RANGE));
     cpShade.style.setProperty('--shade-base', p.baseColor);
@@ -1890,8 +2014,9 @@
   function openEditor() {
     if (locked) return;
     draft = prizes.map(editable);
+    draftSettings = { ...settings };
     activeRow = 0;
-    editorNote.textContent = '';
+    syncSettingsForm();
     buildEditorRows();
     editor.showModal();
   }
@@ -1899,24 +2024,32 @@
   editBtn.addEventListener('click', openEditor);
   document.getElementById('cancelEdit').addEventListener('click', () => editor.close());
   document.getElementById('resetPrizes').addEventListener('click', () => {
-    if (!confirm('기본 선물로 되돌릴까요? (Reset to the default prizes?)')) return;
+    if (!confirm('선물과 게임 설정을 기본값으로 되돌릴까요? (Reset prizes and game settings?)')) return;
     draft = DEFAULT_PRIZES.map(editable);
+    draftSettings = { ...DEFAULT_SETTINGS };
+    syncSettingsForm();
     buildEditorRows();
   });
   editorForm.addEventListener('submit', (e) => {
-    const empty = draft.findIndex(p => !p.name.trim());
-    if (empty >= 0) {
+    const empty = editorIndices().find(i => !draft[i].name.trim());
+    if (empty !== undefined) {
       e.preventDefault();
-      editorNote.textContent = `${empty + 1}승 선물 이름을 입력해 주세요.`;
-      editorRows.children[empty].querySelector('.ed-name').focus();
+      editorNote.textContent = `${winsLabel(empty)}승 선물 이름을 입력해 주세요.`;
+      rowEls[empty].querySelector('.ed-name').focus();
       return;
     }
     prizes = draft.map(p => ({ ...p, name: p.name.trim(), sub: p.sub.trim(), icon: p.icon.trim() || '🎁' }));
-    if (!savePrizes()) {
+    const stagesChanged = draftSettings.stages !== settings.stages;
+    settings = { ...draftSettings };
+    if (!savePrizes() || !saveSettings()) {
       alert('이 브라우저에 저장하지 못했어요. 새로고침하면 원래대로 돌아가요.\n(Could not save in this browser.)');
     }
     renderPrizes();
-    updateStageLabel();
+    if (stagesChanged) {
+      restart();  // a different ladder can't continue the current run
+    } else {
+      updateStageLabel();
+    }
   });
 
   btnOdd.addEventListener('click', () => selectGuess('odd'));
