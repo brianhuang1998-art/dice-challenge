@@ -785,11 +785,11 @@
   @keyframes confirmThrob { 50% { scale: 1.06; } }
 
   #restartBtn {
-    justify-self: center;
+    flex: 0 0 auto;
     background: #fff;
     border: 3px solid var(--accent);
     color: var(--accent);
-    width: 340px;
+    width: 300px;
     padding: 16px 0;
     font-size: 1.4rem;
     border-radius: 999px;
@@ -808,25 +808,32 @@
   }
   /* end screen is laid out at the game's own size (.layout: 700 + 20 + 344 = 1064 x 800)
      and scaled to the window by fitCardToWindow(), so it matches the game screen.
-     The picture (or the 10승 card) takes whatever height the other rows leave. */
+     The picture (or the 10승 card) takes whatever height the other rows leave;
+     the prize list and Play Again share one bottom row to leave it more. */
   .over-stage {
     flex-shrink: 0;
     width: 1064px;
     height: 800px;
-    padding: 20px 0;
+    padding: 12px 0;
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto auto;
-    grid-template-areas: "msg" "img" "earned" "btn";
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas: "msg" "img" "foot";
     justify-items: center;
-    row-gap: 18px;
+    row-gap: 12px;
   }
   @media (max-aspect-ratio: 1/1) {
     .over-stage { width: 700px; height: 1000px; }  /* portrait: same width as the stacked game */
   }
   #overMessage { grid-area: msg; }
   .result-img, .grand-card { grid-area: img; }
-  .earned { grid-area: earned; }
-  #restartBtn { grid-area: btn; }
+  .over-foot {
+    grid-area: foot;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    max-width: 100%;
+  }
   .result-img {
     height: 100%;
     aspect-ratio: 9 / 10;
@@ -871,7 +878,7 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
-    max-width: 960px;
+    max-width: 680px;
     margin: 0 auto;
   }
   .prize-chip {
@@ -1035,8 +1042,10 @@
       <div class="grand-prize" id="grandPrize"></div>
       <div class="grand-heart" id="grandIcon"></div>
     </div>
-    <div class="earned" id="earned"></div>
-    <button id="restartBtn">다시 하기 <span class="en">Play Again</span></button>
+    <div class="over-foot">
+      <div class="earned" id="earned"></div>
+      <button id="restartBtn">다시 하기 <span class="en">Play Again</span></button>
+    </div>
    </div>
   </div>
 
