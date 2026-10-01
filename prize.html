@@ -785,43 +785,52 @@
   @keyframes confirmThrob { 50% { scale: 1.06; } }
 
   #restartBtn {
-    flex: 0 0 auto;
-    background: transparent;
-    border: 2px solid var(--accent);
+    justify-self: center;
+    background: #fff;
+    border: 3px solid var(--accent);
     color: var(--accent);
-    width: 100%;
-    max-width: 220px;
-    padding: 10px 0;
-    font-size: 0.95rem;
-    margin: 0 0 16px;
+    width: 340px;
+    padding: 16px 0;
+    font-size: 1.4rem;
+    border-radius: 999px;
   }
   #overArea:not(.hidden) {
     position: fixed;
     inset: 0;
-    width: 100vw;
-    height: 100vh;
     background:
       radial-gradient(circle at 12% 18%, rgba(255,255,255,0.7) 0 2px, transparent 3px) 0 0 / 46px 46px,
       linear-gradient(160deg, #ffd6e6 0%, #ffe9f1 45%, #fbd3e9 100%);
     z-index: 50;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: safe center;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 16px 0;
+    justify-content: center;
+    overflow: hidden;
   }
+  /* end screen is laid out at the game's own size (.layout: 700 + 20 + 344 = 1064 x 800)
+     and scaled to the window by fitCardToWindow(), so it matches the game screen.
+     The picture (or the 10승 card) takes whatever height the other rows leave. */
+  .over-stage {
+    flex-shrink: 0;
+    width: 1064px;
+    height: 800px;
+    padding: 20px 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "msg" "img" "earned" "btn";
+    justify-items: center;
+    row-gap: 18px;
+  }
+  @media (max-aspect-ratio: 1/1) {
+    .over-stage { width: 700px; height: 1000px; }  /* portrait: same width as the stacked game */
+  }
+  #overMessage { grid-area: msg; }
+  .result-img, .grand-card { grid-area: img; }
+  .earned { grid-area: earned; }
+  #restartBtn { grid-area: btn; }
   .result-img {
-    height: 62vh;
+    height: 100%;
     aspect-ratio: 9 / 10;
-    max-width: 100%;
-    flex: 0 1 auto;
-    min-height: 0;
     object-fit: cover;
-    border-radius: 0;
-    margin: 16px 0;
-    box-shadow: none;
   }
   .message {
     font-size: 1.5rem;
@@ -844,37 +853,31 @@
     display: block;
   }
   #overMessage {
-    flex: 0 0 auto;
-    font-size: 0.95rem;
+    font-size: 1.6rem;
     min-height: auto;
-    margin: 16px 0 0;
-    padding: 8px 22px;
-    max-width: calc(100vw - 32px);
+    margin: 0;
+    padding: 12px 36px;
+    max-width: 100%;
     text-align: center;
-    border-radius: 18px;  /* a pill on one line, a rounded box once it wraps */
+    border-radius: 30px;  /* a pill on one line, a rounded box once it wraps */
   }
   #overMessage.lose { background: rgba(220, 38, 38, 0.92); color: #ffffff; }
   #overMessage.win  { background: rgba(224, 64, 122, 0.92); color: #ffffff; }
-  .earned {
-    flex: 0 0 auto;
-    margin: 0 0 14px;
-    text-align: center;
-  }
-  .earned-caption { font-size: 0.95rem; font-weight: bold; color: var(--text); opacity: 0.75; margin-bottom: 6px; }
-  .earned .prize { opacity: 1; filter: none; width: 340px; height: 56px; margin: 0 auto; flex: none; }
-  .earned .prize-check { display: none; }
+  .earned { text-align: center; }
+  .earned:empty { display: none; }
+  .earned-caption { font-size: 1.3rem; font-weight: bold; color: var(--text); opacity: 0.75; margin-bottom: 10px; }
   .prize-chips {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px;
-    max-width: min(560px, calc(100vw - 32px));
+    gap: 10px;
+    max-width: 960px;
     margin: 0 auto;
   }
   .prize-chip {
-    padding: 4px 12px;
+    padding: 5px 16px;
     font-family: var(--title-font);
-    font-size: 1rem;
+    font-size: 1.3rem;
     color: var(--c);
     background: #fff;
     border: 2px solid color-mix(in srgb, var(--c) 40%, white);
@@ -885,16 +888,17 @@
     text-decoration-thickness: 2px;
     opacity: 0.75;
   }
-  .prize-chip.kept { font-size: 1.15rem; background: color-mix(in srgb, var(--c) 10%, white); }
+  .prize-chip.kept { font-size: 1.45rem; background: color-mix(in srgb, var(--c) 10%, white); }
   .prize-chip .prize-img { width: 1.3em; height: 1.3em; }
-  .earned-none { font-family: var(--title-font); font-size: 1.4rem; color: #9b6b84; }
+  .earned-none { font-family: var(--title-font); font-size: 2.2rem; color: #9b6b84; }
 
   /* final 10승 screen */
   .grand-card {
     position: relative;
-    width: min(520px, calc(100vw - 32px));
+    align-self: center;
+    width: 620px;
     padding: 34px 20px 30px;
-    margin: 18px 0;
+    margin: 10px 0;
     text-align: center;
     border-radius: 32px;
     background: linear-gradient(120deg, #ffe3f0, #fff4c9, #e3f4ff, #f1e3ff, #ffe3f0);
@@ -1022,6 +1026,7 @@
   <div class="tension-veil" id="tensionVeil"></div>
 
   <div id="overArea" class="hidden">
+   <div class="over-stage" id="overStage">
     <div class="message" id="overMessage"></div>
     <img id="overImg" class="result-img" src="" alt="Stage result">
     <div class="grand-card hidden" id="grandCard">
@@ -1032,6 +1037,7 @@
     </div>
     <div class="earned" id="earned"></div>
     <button id="restartBtn">다시 하기 <span class="en">Play Again</span></button>
+   </div>
   </div>
 
 <script>
@@ -1559,6 +1565,7 @@
     stageLabel.classList.add('hidden');
     gameArea.classList.add('hidden');
     overArea.classList.remove('hidden');
+    fitToWindow(overStage);
     overMessage.innerHTML = html;
     overMessage.className = `message ${tone}`;
     overImg.classList.toggle('hidden', !imgSrc);
@@ -1938,13 +1945,19 @@
   restartBtn.addEventListener('click', restart);
 
   const PAGE_MARGIN = 16;
-  function fitCardToWindow() {
+  const overStage = document.getElementById('overStage');
+  function fitToWindow(el) {
+    if (!el.offsetWidth) return;  // hidden right now; fitted again when shown
     const scale = Math.min(
       1,
-      (window.innerWidth - PAGE_MARGIN * 2) / layout.offsetWidth,
-      (window.innerHeight - PAGE_MARGIN * 2) / layout.offsetHeight,
+      (window.innerWidth - PAGE_MARGIN * 2) / el.offsetWidth,
+      (window.innerHeight - PAGE_MARGIN * 2) / el.offsetHeight,
     );
-    layout.style.transform = scale < 1 ? `scale(${scale})` : '';
+    el.style.transform = scale < 1 ? `scale(${scale})` : '';
+  }
+  function fitCardToWindow() {
+    fitToWindow(layout);
+    fitToWindow(overStage);
   }
   window.addEventListener('resize', fitCardToWindow);
   fitCardToWindow();
