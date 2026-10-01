@@ -809,7 +809,7 @@
   /* end screen is laid out at the game's own size (.layout: 700 + 20 + 344 = 1064 x 800)
      and scaled to the window by fitCardToWindow(), so it matches the game screen.
      The picture (or the 10승 card) takes whatever height the other rows leave;
-     the prize list and Play Again share one bottom row to leave it more. */
+     the prize list and Play Again sit compactly underneath. */
   .over-stage {
     flex-shrink: 0;
     width: 1064px;
@@ -829,9 +829,9 @@
   .over-foot {
     grid-area: foot;
     display: flex;
+    flex-direction: column;  /* prize line, then Play Again under it */
     align-items: center;
-    justify-content: center;
-    gap: 32px;
+    gap: 10px;
     max-width: 100%;
   }
   .result-img {
@@ -877,7 +877,7 @@
     align-items: center;
     justify-content: center;
     gap: 10px 14px;
-    max-width: 800px;
+    max-width: 1000px;
   }
   .earned:empty { display: none; }
   .earned-caption { font-size: 1.3rem; font-weight: bold; color: var(--text); opacity: 0.75; white-space: nowrap; }
