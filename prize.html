@@ -540,20 +540,21 @@
     justify-content: center;
     gap: 56px;
     margin: 12px 0 4px;
-    opacity: 0.6;
-    filter: grayscale(0.45);
-    transition: opacity 0.2s, filter 0.2s;
   }
   .dice-row:focus-visible { outline: 3px dashed var(--accent); outline-offset: 6px; border-radius: 20px; }
-  .dice-row.ready {
-    opacity: 1;
-    filter: none;
-    cursor: pointer;
-  }
+  .dice-row.ready { cursor: pointer; }
   .dice-row.rolling {
     pointer-events: none;
   }
+  .dice-row.ready .dice-pedestal, .dice-pedestal.landed {
+    opacity: 1;
+    filter: none;
+  }
+  /* each die is faded until a guess is picked, and while rolling until it lands */
   .dice-pedestal {
+    opacity: 0.6;
+    filter: grayscale(0.45);
+    transition: opacity 0.3s, filter 0.3s;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1494,8 +1495,8 @@
     updateCashOut();
     diceRow.classList.remove('ready');
     diceRow.classList.add('rolling');
-    pedestal1.classList.remove('bounce');
-    pedestal2.classList.remove('bounce');
+    pedestal1.classList.remove('bounce', 'landed');
+    pedestal2.classList.remove('bounce', 'landed');
     message.textContent = '';
     message.className = 'message';
     winImg.classList.add('invisible');
@@ -1509,13 +1510,13 @@
     setTension(isTense(stage));
 
     setTimeout(() => {
-      pedestal1.classList.add('bounce');
+      pedestal1.classList.add('bounce', 'landed');
       if (t.second > t.first) {
         sumLabel.innerHTML = `첫 번째 주사위: ${a} · 두근두근... 💓 <span class="en">First die: ${a}</span>`;
       }
     }, t.first);
     setTimeout(() => {
-      pedestal2.classList.add('bounce');
+      pedestal2.classList.add('bounce', 'landed');
       setTension(false);
       showRoundResult(a, b);
     }, t.second);
@@ -1640,6 +1641,8 @@
     btnOdd.disabled = false;
     btnEven.disabled = false;
     diceRow.classList.remove('ready', 'rolling');
+    pedestal1.classList.remove('landed');
+    pedestal2.classList.remove('landed');
     sumLabel.classList.remove('compact');
     sumLabel.innerHTML = SUM_HINT;
     message.textContent = '';
