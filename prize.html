@@ -118,7 +118,7 @@
     border: 2px solid color-mix(in srgb, var(--c) 35%, white);
     border-radius: 14px;
     position: relative;
-    opacity: 0.85;
+    opacity: 0.6;
     transition: opacity 0.3s, filter 0.3s, transform 0.3s, box-shadow 0.3s;
   }
   .prize-badge {
@@ -876,16 +876,16 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 10px 14px;
+    gap: 8px 10px;
     max-width: 1000px;
   }
   .earned:empty { display: none; }
-  .earned-caption { font-size: 1.3rem; font-weight: bold; color: var(--text); opacity: 0.75; white-space: nowrap; }
+  .earned-caption { font-size: 1rem; font-weight: bold; color: var(--text); opacity: 0.75; white-space: nowrap; }
   .prize-chips { display: contents; }  /* chips join the caption's line */
   .prize-chip {
-    padding: 5px 16px;
+    padding: 3px 12px;
     font-family: var(--title-font);
-    font-size: 1.3rem;
+    font-size: 1.05rem;
     color: var(--c);
     background: #fff;
     border: 2px solid color-mix(in srgb, var(--c) 40%, white);
@@ -896,7 +896,7 @@
     text-decoration-thickness: 2px;
     opacity: 0.75;
   }
-  .prize-chip.kept { font-size: 1.45rem; background: color-mix(in srgb, var(--c) 10%, white); }
+  .prize-chip.kept { font-size: 1.15rem; background: color-mix(in srgb, var(--c) 10%, white); }
   .prize-chip .prize-img { width: 1.3em; height: 1.3em; }
   .earned-none { font-family: var(--title-font); font-size: 2.2rem; color: #9b6b84; }
 
