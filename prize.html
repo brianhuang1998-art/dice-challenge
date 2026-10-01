@@ -863,6 +863,8 @@
   }
   @media (max-aspect-ratio: 1/1) {
     .over-stage { width: 705px; height: 1000px; }  /* portrait: same width as the stacked game */
+    .final-area .grand-card { width: 400px; }
+    .final-area .win-gallery img { width: 80px; height: 80px; }
   }
   #overMessage { grid-area: msg; }
   .result-img, .final-area { grid-area: img; }
@@ -940,18 +942,20 @@
   .prize-chip .prize-img { width: 1.3em; height: 1.3em; }
   .earned-none { font-family: var(--title-font); font-size: 2.2rem; color: #9b6b84; }
 
-  /* final all-clear screen: the grand prize card, then every win picture */
+  /* final all-clear screen: the grand prize card in the middle, every win picture
+     on an ellipse around it (positions from placeAroundEllipse()) */
   .final-area {
-    align-self: center;
+    position: relative;
+    align-self: stretch;
+    justify-self: stretch;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 22px;
+    justify-content: center;
   }
   .grand-card {
     position: relative;
-    width: 620px;
-    padding: 26px 20px 22px;
+    width: 500px;
+    padding: 18px 20px 16px;
     text-align: center;
     border-radius: 32px;
     background: linear-gradient(120deg, #ffe3f0, #fff4c9, #e3f4ff, #f1e3ff, #ffe3f0);
@@ -961,15 +965,13 @@
   }
   @keyframes rainbowSlide { to { background-position: 300% 0; } }
   .win-gallery {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    max-width: 1000px;
+    position: absolute;
+    inset: 0;
   }
   .win-gallery img {
-    width: 104px;
-    height: 104px;
+    position: absolute;
+    width: 96px;
+    height: 96px;
     object-fit: cover;
     border: 3px solid #fff;
     border-radius: 12px;
@@ -978,7 +980,7 @@
     animation-delay: calc(0.3s + var(--i) * 0.07s);  /* pop in one after another */
   }
   @keyframes galleryPop { from { opacity: 0; transform: scale(0.4) rotate(-8deg); } }
-  .grand-crown { font-size: 3.4rem; line-height: 1; animation: crownBob 1.6s ease-in-out infinite; }
+  .grand-crown { font-size: 2.8rem; line-height: 1; animation: crownBob 1.6s ease-in-out infinite; }
   @keyframes crownBob { 50% { transform: translateY(-8px) rotate(-6deg); } }
   .grand-wins { font-family: var(--title-font); font-size: 2rem; color: #d21c6a; margin-top: 6px; }
   .grand-prize {
@@ -1361,7 +1363,7 @@
     grandPrize.textContent = grand.name;
     // shrink long names so the final card still fits on screen
     const len = [...grand.name].length;
-    grandPrize.style.setProperty('--grand-size', len <= 4 ? '6.5rem' : len <= 8 ? '3.6rem' : '2.4rem');
+    grandPrize.style.setProperty('--grand-size', len <= 4 ? '5.5rem' : len <= 8 ? '3.2rem' : '2.2rem');
     grandIcon.innerHTML = iconHtml(grand);
     grandCard.style.setProperty('--c', grand.color);
   }
@@ -1784,14 +1786,38 @@
     );
     finalArea.classList.remove('hidden');
     // every win picture; rebuilt each time so the pop-in plays again
-    winGallery.replaceChildren(...WIN_LETTERS.map((letter, i) => {
+    const imgs = WIN_LETTERS.map((letter, i) => {
       const img = new Image();
       img.src = imgUrl(letter);
       img.alt = '';
       img.style.setProperty('--i', i);
       return img;
-    }));
+    });
+    winGallery.replaceChildren(...imgs);
+    placeAroundEllipse(imgs, winGallery.offsetWidth, winGallery.offsetHeight, imgs[0].offsetWidth);
     heartRain();
+  }
+
+  // Spreads the pictures evenly (by distance along the curve, not by angle) on the largest
+  // ellipse that fits the box, clockwise from the top centre.
+  function placeAroundEllipse(imgs, w, h, size) {
+    const a = (w - size) / 2;
+    const b = (h - size) / 2;
+    const STEPS = 720;
+    const pts = [];
+    const dist = [0];
+    for (let k = 0; k <= STEPS; k++) {
+      const t = -Math.PI / 2 + (k / STEPS) * 2 * Math.PI;
+      pts.push([a * Math.cos(t), b * Math.sin(t)]);
+      if (k) dist.push(dist[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]));
+    }
+    let k = 0;
+    imgs.forEach((img, i) => {
+      const target = (dist[STEPS] * i) / imgs.length;
+      while (dist[k] < target) k++;
+      img.style.left = `${w / 2 + pts[k][0] - size / 2}px`;
+      img.style.top = `${h / 2 + pts[k][1] - size / 2}px`;
+    });
   }
 
   function restart() {
