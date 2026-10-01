@@ -8,10 +8,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #ffe4ee;
+    --bg: #ffd6e8;
     --panel: #fff8fb;
-    --panel-border: #f7b6cd;
-    --accent: #e0407a;
+    --panel-border: #f490ba;
+    --accent: #e8306f;
     --danger: #c81e3c;
     --text: #4a2338;
     --btn-text: #ffffff;
@@ -30,7 +30,7 @@
     background:
       radial-gradient(circle at 12% 18%, rgba(255,255,255,0.7) 0 2px, transparent 3px) 0 0 / 46px 46px,
       radial-gradient(circle at 70% 60%, rgba(255,255,255,0.55) 0 1.5px, transparent 2.5px) 0 0 / 34px 34px,
-      linear-gradient(160deg, #ffd6e6 0%, #ffe9f1 45%, #fbd3e9 100%);
+      linear-gradient(160deg, #ffc4dc 0%, #ffdfec 45%, #f8c0e1 100%);
     background-color: var(--bg);
     color: var(--text);
     font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
@@ -95,7 +95,7 @@
     font-weight: bold;
     color: var(--accent);
     background: #fff;
-    border: 2px solid #f9a8c6;
+    border: 2px solid #f78bb7;
     border-radius: 999px;
   }
   .prize-list {
@@ -118,8 +118,7 @@
     border: 2px solid color-mix(in srgb, var(--c) 35%, white);
     border-radius: 14px;
     position: relative;
-    opacity: 0.72;
-    filter: saturate(0.8);
+    opacity: 0.85;
     transition: opacity 0.3s, filter 0.3s, transform 0.3s, box-shadow 0.3s;
   }
   .prize-badge {
@@ -265,7 +264,7 @@
     font-weight: bold;
     color: var(--accent);
     background: #fff;
-    border: 2px solid #f9a8c6;
+    border: 2px solid #f78bb7;
     border-radius: 999px;
   }
   .edit-btn:hover { background: #ffe4ee; }
@@ -285,7 +284,7 @@
   .editor::backdrop { background: rgba(74,35,56,0.45); }
   .editor form { display: flex; flex-direction: column; max-height: calc(100vh - 30px); }
   .editor-head { padding: 18px 22px 10px; border-bottom: 2px dashed #f7c6d8; }
-  .editor-head h2 { margin: 0 0 4px; font-family: var(--title-font); font-weight: normal; font-size: 1.6rem; color: #c2276a; }
+  .editor-head h2 { margin: 0 0 4px; font-family: var(--title-font); font-weight: normal; font-size: 1.6rem; color: #d21c6a; }
   .editor-head p { margin: 0 0 10px; font-size: 0.88rem; line-height: 1.45; opacity: 0.85; }
   .editor-head p .en { display: block; margin: 0; }
   .emoji-palette { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -441,7 +440,7 @@
   }
   .ed-btn .en { margin-left: 4px; }
   .ed-btn.primary { background: var(--accent); color: #fff; }
-  .ed-btn.ghost { background: #fff; color: var(--accent); border: 2px solid #f9a8c6; }
+  .ed-btn.ghost { background: #fff; color: var(--accent); border: 2px solid #f78bb7; }
   .editor-foot {
     display: flex; gap: 8px; align-items: center;
     padding: 12px 22px 16px;
@@ -486,7 +485,7 @@
     font-weight: normal;
     font-size: 2.3rem;
     line-height: 1.2;
-    color: #c2276a;
+    color: #d21c6a;
     text-shadow: 0 2px 0 #fff, 0 4px 6px rgba(194,39,106,0.2);
   }
   .stage-label { color: var(--accent); font-weight: bold; margin-bottom: 10px; font-size: 1.3rem; line-height: 1.2; }
@@ -512,8 +511,8 @@
     justify-content: center;
     gap: 56px;
     margin: 12px 0 4px;
-    opacity: 0.45;
-    filter: grayscale(0.7);
+    opacity: 0.6;
+    filter: grayscale(0.45);
     transition: opacity 0.2s, filter 0.2s;
   }
   .dice-row:focus-visible { outline: 3px dashed var(--accent); outline-offset: 6px; border-radius: 20px; }
@@ -750,10 +749,10 @@
     width: 145px;
     padding: 12px 0;
     font-size: 1.02rem;
-    background: #c9a2b6;
+    background: #d58ab0;
     color: var(--btn-text);
     border-radius: 999px;
-    box-shadow: 0 4px 0 #a17d90;
+    box-shadow: 0 4px 0 #a9628a;
   }
   .guess-btn.selected { box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 0 0 4px #fff, 0 0 0 7px currentColor; }
   #btnOdd.selected { background: #e0407a; color: #fff; }
@@ -799,7 +798,7 @@
     inset: 0;
     background:
       radial-gradient(circle at 12% 18%, rgba(255,255,255,0.7) 0 2px, transparent 3px) 0 0 / 46px 46px,
-      linear-gradient(160deg, #ffd6e6 0%, #ffe9f1 45%, #fbd3e9 100%);
+      linear-gradient(160deg, #ffc4dc 0%, #ffdfec 45%, #f8c0e1 100%);
     z-index: 50;
     display: flex;
     align-items: center;
@@ -912,12 +911,12 @@
     background: linear-gradient(120deg, #ffe3f0, #fff4c9, #e3f4ff, #f1e3ff, #ffe3f0);
     background-size: 300% 100%;
     animation: rainbowSlide 6s linear infinite;
-    box-shadow: 0 0 0 6px #fff, 0 0 0 10px #f9a8c6, 0 20px 50px rgba(224,64,122,0.35);
+    box-shadow: 0 0 0 6px #fff, 0 0 0 10px #f78bb7, 0 20px 50px rgba(224,64,122,0.35);
   }
   @keyframes rainbowSlide { to { background-position: 300% 0; } }
   .grand-crown { font-size: 3.4rem; line-height: 1; animation: crownBob 1.6s ease-in-out infinite; }
   @keyframes crownBob { 50% { transform: translateY(-8px) rotate(-6deg); } }
-  .grand-wins { font-family: var(--title-font); font-size: 2rem; color: #c2276a; margin-top: 6px; }
+  .grand-wins { font-family: var(--title-font); font-size: 2rem; color: #d21c6a; margin-top: 6px; }
   .grand-prize {
     font-family: var(--title-font);
     font-size: var(--grand-size, 6.5rem);
