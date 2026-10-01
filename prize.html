@@ -54,6 +54,8 @@
     flex-direction: column;
     text-align: center;
     box-shadow: 0 0 0 6px rgba(255,255,255,0.7), 0 14px 34px rgba(224,64,122,0.22);
+    position: relative;
+    overflow: hidden;
   }
 
   /* ---------- prize ladder (from the 주사위 홀짝게임 poster) ---------- */
@@ -71,6 +73,7 @@
     box-shadow: 0 0 0 6px rgba(255,255,255,0.7), 0 14px 34px rgba(224,64,122,0.22);
   }
   .ladder-head {
+    position: relative;
     text-align: center;
     margin-bottom: 4px;
   }
@@ -215,10 +218,43 @@
   }
   .prize.grand .prize-icon { font-size: 1.9rem; }
 
+  /* roll log under the ladder: small print, newest at the bottom */
+  .roll-log {
+    flex: 0 0 auto;
+    padding-top: 7px;
+    border-top: 2px dashed #f7c6d8;
+    text-align: left;
+  }
+  .roll-log-title { font-size: 0.72rem; font-weight: bold; color: #9b6b84; margin-bottom: 4px; }
+  .roll-log-title .en { margin-left: 4px; }
+  .roll-log-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    height: 78px;  /* four rows, a full 10-stage run; scrolls after that */
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 3px 4px;
+  }
+  .roll-log-list li {
+    padding: 1px 7px;
+    font-size: 0.68rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    background: #fff;
+    border: 1px solid #ecd3de;
+    border-radius: 999px;
+  }
+  .roll-log-list li.win  { color: #2e7d32; border-color: #b9dfbb; }
+  .roll-log-list li.lose { color: var(--danger); border-color: #f3b5c0; }
+  .roll-log-list li.empty { border-style: dashed; opacity: 0.55; }
+
   .prize-img { width: 1.6em; height: 1.6em; object-fit: contain; vertical-align: middle; border-radius: 6px; }
   .grand-heart .prize-img { width: 64px; height: 64px; }
 
-  .ladder-head { position: relative; }
   .edit-btn {
     position: absolute;
     z-index: 2;  /* .ladder-title's filter paints it above earlier positioned siblings */
@@ -427,7 +463,6 @@
     .prize-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 52px; gap: 10px 14px; }
     .prize.grand { grid-column: 1 / -1; }
   }
-  .card { position: relative; overflow: hidden; }
   .card > * { position: relative; z-index: 1; }
   .card > .bg-girl {
     position: absolute;
@@ -659,6 +694,33 @@
   .face-5 .pip:nth-child(1), .face-5 .pip:nth-child(3), .face-5 .pip:nth-child(5), .face-5 .pip:nth-child(7), .face-5 .pip:nth-child(9) { opacity: 1; }
   .face-6 .pip:nth-child(1), .face-6 .pip:nth-child(3), .face-6 .pip:nth-child(4), .face-6 .pip:nth-child(6), .face-6 .pip:nth-child(7), .face-6 .pip:nth-child(9) { opacity: 1; }
 
+  /* stages TENSE_FROM..10: --tense runs 0 -> 1 and drives the glow and the vignette */
+  .card.tense {
+    border-color: color-mix(in srgb, #ff6a3d calc(var(--tense) * 100%), var(--panel-border));
+    animation: tenseGlow 1.8s ease-in-out infinite;
+  }
+  @keyframes tenseGlow {
+    50% { box-shadow: 0 0 0 6px rgba(255,255,255,0.7), 0 0 calc(14px + var(--tense) * 26px) 6px rgba(255,90,60,calc(0.25 + var(--tense) * 0.35)), 0 14px 34px rgba(224,64,122,0.22); }
+  }
+  .card.tense.tense-rolling { animation: tenseGlow 0.85s ease-in-out infinite, cardBeat 0.85s ease-in-out infinite; }
+  @keyframes cardBeat {
+    0%, 30%, 100% { scale: 1; }
+    15% { scale: 1.008; }
+    45% { scale: 1.004; }
+  }
+  .tension-veil {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(70,0,25,calc(0.2 + var(--tense) * 0.35)) 100%);
+    opacity: 0;
+    transition: opacity 0.6s;
+  }
+  .tension-veil.on { opacity: 1; animation: veilBeat 0.85s ease-in-out infinite; }
+  @keyframes veilBeat { 15% { opacity: 0.7; } 45% { opacity: 0.85; } }
+  .card.tense .next-prize { max-width: 260px; }
+
   .sum-label { margin: 14px 0 6px; opacity: 0.8; font-size: 1.15rem; line-height: 1.4; min-height: 3.22rem; }
   .sum-label.compact { font-size: 0.95rem; min-height: 1.33rem; margin-top: 6px; }
 
@@ -697,6 +759,31 @@
   #btnOdd.selected { background: #e0407a; color: #fff; }
   #btnEven.selected { background: #7b3fc4; color: #fff; }
 
+  /* sits over the empty win-picture slot while a guess is being picked, so nothing shifts */
+  .cash-out {
+    position: absolute;
+    left: 50%;
+    bottom: 70px;
+    translate: -50% 0;
+    padding: 10px 22px;
+    font-family: var(--title-font);
+    font-weight: normal;
+    font-size: 1.1rem;
+    white-space: nowrap;
+    color: #7a4b00;
+    background: linear-gradient(180deg, #ffe58a, #ffc93c);
+    border-radius: 999px;
+    box-shadow: 0 4px 0 #d79a12, 0 6px 14px rgba(215,154,18,0.35);
+  }
+  .cash-out .en { font-family: inherit; font-size: 0.8em; margin-left: 6px; }
+  .cash-out.confirm {
+    color: #fff;
+    background: linear-gradient(180deg, #ff8fb5, #e0407a);
+    box-shadow: 0 4px 0 #a8245a, 0 6px 14px rgba(224,64,122,0.4);
+    animation: confirmThrob 0.6s ease-in-out infinite;
+  }
+  @keyframes confirmThrob { 50% { scale: 1.06; } }
+
   #restartBtn {
     flex: 0 0 auto;
     background: transparent;
@@ -713,7 +800,9 @@
     inset: 0;
     width: 100vw;
     height: 100vh;
-    background: var(--bg);
+    background:
+      radial-gradient(circle at 12% 18%, rgba(255,255,255,0.7) 0 2px, transparent 3px) 0 0 / 46px 46px,
+      linear-gradient(160deg, #ffd6e6 0%, #ffe9f1 45%, #fbd3e9 100%);
     z-index: 50;
     display: flex;
     flex-direction: column;
@@ -766,11 +855,6 @@
   }
   #overMessage.lose { background: rgba(220, 38, 38, 0.92); color: #ffffff; }
   #overMessage.win  { background: rgba(224, 64, 122, 0.92); color: #ffffff; }
-  #overArea:not(.hidden) {
-    background:
-      radial-gradient(circle at 12% 18%, rgba(255,255,255,0.7) 0 2px, transparent 3px) 0 0 / 46px 46px,
-      linear-gradient(160deg, #ffd6e6 0%, #ffe9f1 45%, #fbd3e9 100%);
-  }
   .earned {
     flex: 0 0 auto;
     margin: 0 0 14px;
@@ -779,7 +863,7 @@
   .earned-caption { font-size: 0.95rem; font-weight: bold; color: var(--text); opacity: 0.75; margin-bottom: 6px; }
   .earned .prize { opacity: 1; filter: none; width: 340px; height: 56px; margin: 0 auto; flex: none; }
   .earned .prize-check { display: none; }
-  .lost-chips {
+  .prize-chips {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -787,7 +871,7 @@
     max-width: min(560px, calc(100vw - 32px));
     margin: 0 auto;
   }
-  .lost-chip {
+  .prize-chip {
     padding: 4px 12px;
     font-family: var(--title-font);
     font-size: 1rem;
@@ -795,10 +879,14 @@
     background: #fff;
     border: 2px solid color-mix(in srgb, var(--c) 40%, white);
     border-radius: 999px;
+  }
+  .prize-chip.lost {
     text-decoration-line: line-through;
     text-decoration-thickness: 2px;
     opacity: 0.75;
   }
+  .prize-chip.kept { font-size: 1.15rem; background: color-mix(in srgb, var(--c) 10%, white); }
+  .prize-chip .prize-img { width: 1.3em; height: 1.3em; }
   .earned-none { font-family: var(--title-font); font-size: 1.4rem; color: #9b6b84; }
 
   /* final 10승 screen */
@@ -867,43 +955,15 @@
 
     <div id="gameArea">
       <div class="dice-row" id="diceRow" role="button" tabindex="0" aria-label="주사위 굴리기 Roll the dice">
-        <div class="dice-pedestal" id="pedestal1">
-          <div class="dice-scene">
-            <div class="dice-view">
-            <div class="dice-cube" id="cube1">
-              <div class="core core-1"></div><div class="core core-2"></div><div class="core core-3"></div><div class="core core-4"></div><div class="core core-5"></div><div class="core core-6"></div>
-              <div class="face face-1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-              <div class="face face-2"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-              <div class="face face-3"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-              <div class="face face-4"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-              <div class="face face-5"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-              <div class="face face-6"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-            </div>
-            </div>
-          </div>
-          <div class="dice-shadow"></div>
-        </div>
-        <div class="dice-pedestal" id="pedestal2">
-          <div class="dice-scene">
-            <div class="dice-view">
-            <div class="dice-cube" id="cube2">
-              <div class="core core-1"></div><div class="core core-2"></div><div class="core core-3"></div><div class="core core-4"></div><div class="core core-5"></div><div class="core core-6"></div>
-              <div class="face face-1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-              <div class="face face-2"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-              <div class="face face-3"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-              <div class="face face-4"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-              <div class="face face-5"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-              <div class="face face-6"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
-            </div>
-            </div>
-          </div>
-          <div class="dice-shadow"></div>
-        </div>
+        <!-- dice faces are built by buildDie() in the script -->
+        <div class="dice-pedestal" id="pedestal1"></div>
+        <div class="dice-pedestal" id="pedestal2"></div>
       </div>
 
-      <div class="sum-label" id="sumLabel">홀수 또는 짝수를 고른 후 주사위를 클릭해서 굴리세요 <span class="en">Pick Odd or Even, then click the dice to roll</span></div>
+      <div class="sum-label" id="sumLabel"></div>
       <div class="message" id="message"></div>
       <img id="winImg" class="win-img invisible" alt="Correct">
+      <button id="cashOutBtn" class="cash-out hidden" type="button"></button>
 
       <div class="guess-row">
         <button id="btnOdd" class="guess-btn">홀수 <span class="en">ODD</span></button>
@@ -919,6 +979,10 @@
       <div class="ladder-ribbon">운을 굴려 ❤ 선물을 GET!</div>
     </div>
     <ol class="prize-list" id="prizeList"></ol>
+    <section class="roll-log">
+      <div class="roll-log-title">🎲 굴림 기록 <span class="en">Roll log</span></div>
+      <ol class="roll-log-list" id="rollLogList"></ol>
+    </section>
   </aside>
   </div>
 
@@ -955,6 +1019,8 @@
     </div>
   </dialog>
 
+  <div class="tension-veil" id="tensionVeil"></div>
+
   <div id="overArea" class="hidden">
     <div class="message" id="overMessage"></div>
     <img id="overImg" class="result-img" src="" alt="Stage result">
@@ -965,7 +1031,7 @@
       <div class="grand-heart" id="grandIcon"></div>
     </div>
     <div class="earned" id="earned"></div>
-    <button id="restartBtn" class="hidden">다시 하기 <span class="en">Play Again</span></button>
+    <button id="restartBtn">다시 하기 <span class="en">Play Again</span></button>
   </div>
 
 <script>
@@ -1029,7 +1095,10 @@
   const IMG_VERSION = 2;
   const IMG_REVEAL_MAX_MS = 600;  // longest wait for a new win/lose picture before showing it anyway
   const ROLL_MS = 1500;        // dice tumble time; the result shows when it ends
-  document.documentElement.style.setProperty('--roll-duration', `${ROLL_MS}ms`);
+  // From this stage on the dice roll slower and land one at a time, with a heartbeat glow.
+  const TENSE_FROM = 7;
+  const CASH_OUT_CONFIRM_MS = 3000;  // how long the "tap again to confirm" state waits
+  const SUM_HINT = '홀수 또는 짝수를 고른 후 주사위를 클릭해서 굴리세요 <span class="en">Pick Odd or Even, then click the dice to roll</span>';
   // Camera angle for the dice; spin and lighting maths both account for it.
   const VIEW_TILT = 'rotateX(-14deg) rotateY(-18deg)';
   const VIEW_SCALE = 0.84;     // tilted die projects wider, so shrink it to keep the two apart
@@ -1071,13 +1140,26 @@
     ...Array.from({ length: LOSE_IMG_COUNT }, (_, i) => i + 1),
   ].forEach(name => { new Image().src = imgUrl(name); });
 
+  // Each die: six inner core plates plus six faces of a 3x3 pip grid; CSS shows the right pips.
+  function buildDie(pedestal, id) {
+    const sides = [1, 2, 3, 4, 5, 6];
+    const cores = sides.map(n => `<div class="core core-${n}"></div>`).join('');
+    const pips = '<span class="pip"></span>'.repeat(9);
+    const faces = sides.map(n => `<div class="face face-${n}">${pips}</div>`).join('');
+    pedestal.innerHTML = `<div class="dice-scene"><div class="dice-view">`
+      + `<div class="dice-cube" id="${id}">${cores}${faces}</div>`
+      + `</div></div><div class="dice-shadow"></div>`;
+  }
+
   const card = document.getElementById('card');
   const title = document.getElementById('title');
   const stageLabel = document.getElementById('stageLabel');
-  const cube1 = document.getElementById('cube1');
-  const cube2 = document.getElementById('cube2');
   const pedestal1 = document.getElementById('pedestal1');
   const pedestal2 = document.getElementById('pedestal2');
+  buildDie(pedestal1, 'cube1');
+  buildDie(pedestal2, 'cube2');
+  const cube1 = document.getElementById('cube1');
+  const cube2 = document.getElementById('cube2');
   const sumLabel = document.getElementById('sumLabel');
   const message = document.getElementById('message');
   const btnOdd = document.getElementById('btnOdd');
@@ -1096,6 +1178,9 @@
   const grandPrize = document.getElementById('grandPrize');
   const grandIcon = document.getElementById('grandIcon');
   const editBtn = document.getElementById('editBtn');
+  const cashOutBtn = document.getElementById('cashOutBtn');
+  const rollLogList = document.getElementById('rollLogList');
+  const tensionVeil = document.getElementById('tensionVeil');
 
   function esc(text) {
     return String(text ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -1163,9 +1248,22 @@
 
   function updateStageLabel() {
     const p = prizes[stage - 1];
-    stageLabel.innerHTML = `스테이지 ${stage} / ${TOTAL_STAGES}`
+    const tense = stage >= TENSE_FROM;
+    const name = stage === TOTAL_STAGES ? '🔥 마지막 스테이지' : tense ? '🔥 스테이지' : '스테이지';
+    stageLabel.innerHTML = `${name} ${stage} / ${TOTAL_STAGES}`
       + `<span class="next-prize" style="--prize-color:${esc(p.color)}">🎁 ${prizeLabel(p)}</span>`;
+    card.classList.toggle('tense', tense);
+    const level = tense ? (stage - TENSE_FROM + 1) / (TOTAL_STAGES - TENSE_FROM + 1) : 0;
+    document.documentElement.style.setProperty('--tense', level.toFixed(2));
     updateLadder(stage - 1);
+  }
+
+  // Tense stages roll longer, and the second die lands well after the first.
+  function rollTiming(s) {
+    if (s < TENSE_FROM) return { first: ROLL_MS, second: ROLL_MS };
+    const level = s - TENSE_FROM + 1;
+    const first = ROLL_MS + level * 350;
+    return { first, second: first + 500 + level * 250 };
   }
 
   // Reads the live (possibly mid-transition) transform so shading follows the CSS roll too.
@@ -1200,10 +1298,11 @@
     return ((deg % 360) + 360) % 360;
   }
 
-  function spinCubeTo(cubeEl, state, targetNumber) {
+  function spinCubeTo(cubeEl, state, targetNumber, ms) {
     const target = ROTATIONS[targetNumber];
-    state.x += 360 * (2 + Math.floor(Math.random() * 2));
-    state.y += 360 * (2 + Math.floor(Math.random() * 2));
+    const turns = () => Math.round(ms / 750) + Math.floor(Math.random() * 2);  // longer rolls spin more
+    state.x += 360 * turns();
+    state.y += 360 * turns();
     state.x += normalize(target.x) - normalize(state.x);
     state.y += normalize(target.y) - normalize(state.y);
     state.tilt = new DOMMatrix();
@@ -1211,8 +1310,9 @@
     state.vy = 0;
     spinning.delete(state);
     cubeEl.classList.remove('tilting');
+    cubeEl.style.setProperty('--roll-duration', `${ms}ms`);
     applyCubeTransform(cubeEl, state);
-    shadeFor(ROLL_MS + 200);  // covers the roll transition
+    shadeFor(ms + 200);  // covers the roll transition
   }
 
   // Always matrix3d + rotateX + rotateY: the browser then eases the tilt back to upright
@@ -1294,6 +1394,7 @@
     btnOdd.disabled = true;
     btnEven.disabled = true;
     editBtn.disabled = true;
+    updateCashOut();
     diceRow.classList.remove('ready');
     diceRow.classList.add('rolling');
     pedestal1.classList.remove('bounce');
@@ -1305,50 +1406,134 @@
 
     const a = rollDie();
     const b = rollDie();
-    spinCubeTo(cube1, cubeState1, a);
-    spinCubeTo(cube2, cubeState2, b);
+    const t = rollTiming(stage);
+    spinCubeTo(cube1, cubeState1, a, t.first);
+    spinCubeTo(cube2, cubeState2, b, t.second);
+    setTension(stage >= TENSE_FROM);
 
     setTimeout(() => {
       pedestal1.classList.add('bounce');
-      pedestal2.classList.add('bounce');
-      const sum = a + b;
-      const isOdd = sum % 2 === 1;
-      const result = isOdd ? 'odd' : 'even';
-      const win = result === selectedGuess;
-
-      sumLabel.innerHTML = `이번 라운드 합계: ${sum} (${isOdd ? '홀수' : '짝수'}) <span class="en">Sum this round: ${sum} (${isOdd ? 'Odd' : 'Even'})</span>`;
-
-      if (win) {
-        const won = prizes[stage - 1];
-        message.innerHTML = `정답! ${won.wins}승 달성 · 🎁 ${prizeLabel(won)} GET! <span class="en">Correct!</span>`;
-        updateLadder(stage);
-        const wonEl = prizeEls[stage - 1];
-        wonEl.classList.remove('just-won');
-        void wonEl.offsetWidth;  // restart the animation
-        wonEl.classList.add('just-won');
-        message.classList.add('win');
-        sumLabel.classList.add('compact');
-        const winLetter = WIN_LETTERS[Math.floor(Math.random() * WIN_LETTERS.length)];
-        swapImage(winImg, imgUrl(winLetter));
-        winImg.classList.remove('invisible');
-        setTimeout(() => {
-          if (stage >= TOTAL_STAGES) {
-            showFinalWin();
-          } else {
-            stage += 1;
-            updateStageLabel();
-            resetRoundControls();
-          }
-        }, 3000);
-      } else {
-        message.innerHTML = '틀렸습니다. 게임 종료! <span class="en">Wrong guess. Game over!</span>';
-        message.classList.add('lose');
-        prizeEls.forEach(el => {
-          if (el.classList.contains('done')) el.classList.replace('done', 'lost');
-        });
-        setTimeout(() => showLose(stage), 1400);
+      if (t.second > t.first) {
+        sumLabel.innerHTML = `첫 번째 주사위: ${a} · 두근두근... 💓 <span class="en">First die: ${a}</span>`;
       }
-    }, ROLL_MS);
+    }, t.first);
+    setTimeout(() => {
+      pedestal2.classList.add('bounce');
+      setTension(false);
+      showRoundResult(a, b);
+    }, t.second);
+  }
+
+  function setTension(on) {
+    card.classList.toggle('tense-rolling', on);
+    tensionVeil.classList.toggle('on', on);
+  }
+
+  function showRoundResult(a, b) {
+    const sum = a + b;
+    const isOdd = sum % 2 === 1;
+    const win = (isOdd ? 'odd' : 'even') === selectedGuess;
+    logRoll({ stage, a, b, guess: selectedGuess, win });
+
+    sumLabel.innerHTML = `이번 라운드 합계: ${sum} (${isOdd ? '홀수' : '짝수'}) <span class="en">Sum this round: ${sum} (${isOdd ? 'Odd' : 'Even'})</span>`;
+
+    if (win) {
+      const won = prizes[stage - 1];
+      message.innerHTML = `정답! ${won.wins}승 달성 · 🎁 ${prizeLabel(won)} GET! <span class="en">Correct!</span>`;
+      updateLadder(stage);
+      const wonEl = prizeEls[stage - 1];
+      wonEl.classList.remove('just-won');
+      void wonEl.offsetWidth;  // restart the animation
+      wonEl.classList.add('just-won');
+      message.classList.add('win');
+      sumLabel.classList.add('compact');
+      swapImage(winImg, randomWinImg());
+      winImg.classList.remove('invisible');
+      setTimeout(() => {
+        if (stage >= TOTAL_STAGES) {
+          showFinalWin();
+        } else {
+          stage += 1;
+          updateStageLabel();
+          resetRoundControls();
+        }
+      }, 3000);
+    } else {
+      message.innerHTML = '틀렸습니다. 게임 종료! <span class="en">Wrong guess. Game over!</span>';
+      message.classList.add('lose');
+      prizeEls.forEach(el => {
+        if (el.classList.contains('done')) el.classList.replace('done', 'lost');
+      });
+      setTimeout(() => showLose(stage), 1400);
+    }
+  }
+
+  function randomWinImg() {
+    return imgUrl(WIN_LETTERS[Math.floor(Math.random() * WIN_LETTERS.length)]);
+  }
+
+  // ---------- roll log ----------
+  const rollLog = [];
+  function logRoll(entry) {
+    rollLog.push(entry);
+    renderRollLog();
+  }
+
+  function renderRollLog() {
+    if (!rollLog.length) {
+      rollLogList.innerHTML = '<li class="empty">아직 기록 없음 · No rolls yet</li>';
+      return;
+    }
+    rollLogList.replaceChildren(...rollLog.map(r => {
+      const li = document.createElement('li');
+      const sum = r.a + r.b;
+      li.className = r.win ? 'win' : 'lose';
+      li.textContent = `${r.stage}. ${r.a}+${r.b}=${sum} ${r.guess === 'odd' ? '홀' : '짝'} ${r.win ? '✓' : '✗'}`;
+      li.title = `선택 ${r.guess === 'odd' ? '홀수' : '짝수'} · 결과 ${sum % 2 ? '홀수' : '짝수'}`;
+      return li;
+    }));
+    rollLogList.scrollTop = rollLogList.scrollHeight;
+  }
+
+  // ---------- cash out: stop between rounds and keep what was won ----------
+  // Two taps (the second within CASH_OUT_CONFIRM_MS) so a stray click can't end the run.
+  let cashOutTimer = null;
+
+  function updateCashOut() {
+    disarmCashOut();
+    cashOutBtn.classList.toggle('hidden', locked || stage === 1);
+  }
+
+  function disarmCashOut() {
+    clearTimeout(cashOutTimer);
+    cashOutTimer = null;
+    cashOutBtn.classList.remove('confirm');
+    cashOutBtn.innerHTML = `🎁 그만하고 받기 · 선물 ${stage - 1}개 <span class="en">Stop &amp; take prizes</span>`;
+  }
+
+  cashOutBtn.addEventListener('click', () => {
+    if (locked) return;
+    if (!cashOutTimer) {
+      cashOutBtn.classList.add('confirm');
+      cashOutBtn.innerHTML = '✋ 한 번 더 누르면 확정! <span class="en">Tap again to confirm</span>';
+      cashOutTimer = setTimeout(disarmCashOut, CASH_OUT_CONFIRM_MS);
+      return;
+    }
+    disarmCashOut();
+    cashOut();
+  });
+
+  function cashOut() {
+    const wins = stage - 1;
+    locked = true;
+    editBtn.disabled = true;
+    showOverScreen(
+      `${wins}승에서 멈췄어요! 선물 ${wins}개 GET! <span class="en">You stopped at ${wins} wins and keep ${wins} prizes!</span>`,
+      'win',
+      randomWinImg(),
+    );
+    showPrizeChips(wins, true);
+    heartRain();
   }
 
   function resetRoundControls() {
@@ -1359,46 +1544,56 @@
     btnEven.disabled = false;
     diceRow.classList.remove('ready', 'rolling');
     sumLabel.classList.remove('compact');
-    sumLabel.innerHTML = '홀수 또는 짝수를 고른 후 주사위를 클릭해서 굴리세요 <span class="en">Pick Odd or Even, then click the dice to roll</span>';
+    sumLabel.innerHTML = SUM_HINT;
     message.textContent = '';
     message.className = 'message';
     winImg.classList.add('invisible');
     editBtn.disabled = false;
     locked = false;
+    updateCashOut();
   }
 
-  function showLose(lostAtStage) {
+  // Swaps the game card for the full-screen result; imgSrc may be empty for no picture.
+  function showOverScreen(html, tone, imgSrc) {
     title.classList.add('hidden');
     stageLabel.classList.add('hidden');
     gameArea.classList.add('hidden');
     overArea.classList.remove('hidden');
-    restartBtn.classList.remove('hidden');
-    overMessage.innerHTML = `스테이지 ${lostAtStage}에서 패배했습니다! <span class="en">You lost at Stage ${lostAtStage}!</span>`;
-    overMessage.className = 'message lose';
-    const randomImg = Math.floor(Math.random() * LOSE_IMG_COUNT) + 1;
-    swapImage(overImg, imgUrl(randomImg));
-    overImg.classList.remove('hidden');
+    overMessage.innerHTML = html;
+    overMessage.className = `message ${tone}`;
+    overImg.classList.toggle('hidden', !imgSrc);
+    if (imgSrc) swapImage(overImg, imgSrc);
     grandCard.classList.add('hidden');
-    showLostPrizes(lostAtStage - 1);
+    earned.replaceChildren();
   }
 
-  // Rule: losing a round forfeits every prize collected so far.
-  function showLostPrizes(wins) {
-    earned.innerHTML = '';
+  function showLose(lostAtStage) {
+    showOverScreen(
+      `스테이지 ${lostAtStage}에서 패배했습니다! <span class="en">You lost at Stage ${lostAtStage}!</span>`,
+      'lose',
+      imgUrl(Math.floor(Math.random() * LOSE_IMG_COUNT) + 1),
+    );
+    showPrizeChips(lostAtStage - 1, false);  // rule: losing a round forfeits every prize so far
+  }
+
+  // kept: prizes taken home with 그만하고 받기; otherwise they are shown crossed out.
+  function showPrizeChips(wins, kept) {
     if (wins === 0) {
       earned.innerHTML = '<div class="earned-none">선물 없음 😢 다시 도전!</div>';
       return;
     }
     const cap = document.createElement('div');
     cap.className = 'earned-caption';
-    cap.innerHTML = `💔 누적 선물 ${wins}개 모두 소멸! <span class="en">All prizes lost</span>`;
+    cap.innerHTML = kept
+      ? `🎁 받은 선물 ${wins}개 <span class="en">Your prizes</span>`
+      : `💔 누적 선물 ${wins}개 모두 소멸! <span class="en">All prizes lost</span>`;
     const chips = document.createElement('div');
-    chips.className = 'lost-chips';
+    chips.className = 'prize-chips';
     for (const p of prizes.slice(0, wins)) {
       const chip = document.createElement('span');
-      chip.className = 'lost-chip';
+      chip.className = 'prize-chip ' + (kept ? 'kept' : 'lost');
       chip.style.setProperty('--c', p.color);
-      chip.textContent = `${p.wins}승 ${p.name}${p.sub ? ' ' + p.sub : ''}`;
+      chip.innerHTML = `${p.wins}승 ${prizeLabel(p)}` + (kept ? ` ${iconHtml(p)}` : '');
       chips.appendChild(chip);
     }
     earned.append(cap, chips);
@@ -1422,28 +1617,25 @@
   }
 
   function showFinalWin() {
-    title.classList.add('hidden');
-    stageLabel.classList.add('hidden');
-    gameArea.classList.add('hidden');
-    overArea.classList.remove('hidden');
-    restartBtn.classList.remove('hidden');
-    overMessage.innerHTML = `축하합니다! ${TOTAL_STAGES}개 스테이지를 모두 클리어했습니다! <span class="en">Congratulations! You cleared all ${TOTAL_STAGES} stages!</span>`;
-    overMessage.className = 'message win';
-    overImg.classList.add('hidden');
-    earned.innerHTML = '';
+    showOverScreen(
+      `축하합니다! ${TOTAL_STAGES}개 스테이지를 모두 클리어했습니다! <span class="en">Congratulations! You cleared all ${TOTAL_STAGES} stages!</span>`,
+      'win',
+      '',
+    );
     grandCard.classList.remove('hidden');
     heartRain();
   }
 
   function restart() {
     stage = 1;
+    rollLog.length = 0;
+    renderRollLog();
     updateStageLabel();
     resetRoundControls();
     title.classList.remove('hidden');
     stageLabel.classList.remove('hidden');
     gameArea.classList.remove('hidden');
     overArea.classList.add('hidden');
-    restartBtn.classList.add('hidden');
   }
 
   // ---------- prize editor ----------
@@ -1514,7 +1706,7 @@
         <span class="ed-badge">${p.wins}승</span>
         <input type="text" class="ed-name" maxlength="20" placeholder="선물 이름 Prize" value="${esc(p.name)}">
         <input type="text" class="ed-sub" maxlength="8" placeholder="수량" title="수량 (선택) · e.g. 2장" value="${esc(p.sub)}">
-        <input type="text" class="ed-icon" maxlength="8" placeholder="🎁" value="${p.img ? '' : esc(p.icon)}" title="이모지 아이콘">
+        <input type="text" class="ed-icon" maxlength="16" placeholder="🎁" value="${p.img ? '' : esc(p.icon)}" title="이모지 아이콘">
         <span class="ed-tools">
           <span class="ed-preview">${iconHtml(p)}</span>
           <button type="button" class="ed-btn ghost ed-upload">🖼️ 이미지</button>
@@ -1759,6 +1951,8 @@
   shadeCube(cubeState1);
   shadeCube(cubeState2);
 
+  sumLabel.innerHTML = SUM_HINT;
+  renderRollLog();
   updateStageLabel();
 </script>
 </body>
