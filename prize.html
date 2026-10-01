@@ -1356,12 +1356,12 @@
   }
 
   // Tense stages roll longer, and the second die lands well after the first;
-  // both grow toward the last stage (2.9s and 4.4s there).
+  // both grow toward the last stage (2.9s and 3.7s there).
   function rollTiming(s) {
     if (!isTense(s)) return { first: ROLL_MS, second: ROLL_MS };
     const level = tenseLevel(s);
     const first = ROLL_MS + Math.round(level * 1400);
-    return { first, second: first + 500 + Math.round(level * 1000) };
+    return { first, second: first + 300 + Math.round(level * 500) };
   }
 
   // Reads the live (possibly mid-transition) transform so shading follows the CSS roll too.
