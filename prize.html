@@ -878,6 +878,8 @@
   }
   @media (max-aspect-ratio: 1/1) {
     .over-stage { width: 705px; height: 1000px; }  /* portrait: same width as the stacked game */
+    /* the tall stage would make a height-filling picture wider than the stage, so size it by width */
+    .over-stage .result-img { width: 100%; height: auto; max-height: 100%; align-self: center; }
     .final-area .grand-card { width: 400px; }
     .final-area .win-gallery img { width: 90px; height: 90px; }
   }
