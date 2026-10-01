@@ -864,7 +864,7 @@
   @media (max-aspect-ratio: 1/1) {
     .over-stage { width: 705px; height: 1000px; }  /* portrait: same width as the stacked game */
     .final-area .grand-card { width: 400px; }
-    .final-area .win-gallery img { width: 80px; height: 80px; }
+    .final-area .win-gallery img { width: 90px; height: 90px; }
   }
   #overMessage { grid-area: msg; }
   .result-img, .final-area { grid-area: img; }
@@ -1794,30 +1794,72 @@
       return img;
     });
     winGallery.replaceChildren(...imgs);
-    placeAroundEllipse(imgs, winGallery.offsetWidth, winGallery.offsetHeight, imgs[0].offsetWidth);
+    placeAroundEllipse(imgs, winGallery.offsetWidth, winGallery.offsetHeight, imgs[0].offsetWidth,
+      grandCard.offsetWidth, grandCard.offsetHeight);
     heartRain();
   }
 
-  // Spreads the pictures evenly (by distance along the curve, not by angle) on the largest
-  // ellipse that fits the box, clockwise from the top centre.
-  function placeAroundEllipse(imgs, w, h, size) {
-    const a = (w - size) / 2;
-    const b = (h - size) / 2;
-    const STEPS = 720;
+  const RING_GAP = 12;     // least space between the grand card and any picture
+  const PICTURE_GAP = 6;   // least space between two neighbouring pictures
+  // Spreads the pictures evenly (by distance along the curve, not by angle), clockwise from the
+  // top centre, on the tightest rounded-rectangle ring around the card that keeps those gaps;
+  // it only grows as far as the w x h box allows.
+  function placeAroundEllipse(imgs, w, h, size, cardW, cardH) {
+    const aMax = (w - size) / 2;
+    const bMax = (h - size) / 2;
+    // start just outside the card's edges; the loop grows it until the corners clear too
+    const reach = size / 2 + RING_GAP;
+    const a0 = cardW / 2 + reach;
+    const b0 = cardH / 2 + reach;
+    let centres = [];
+    for (let grow = 1; grow < 3; grow += 0.02) {
+      const a = Math.min(aMax, a0 * grow);
+      const b = Math.min(bMax, b0 * grow);
+      centres = ellipsePoints(a, b, imgs.length);
+      if (ringFits(centres, size, cardW, cardH) || (a === aMax && b === bMax)) break;
+    }
+    imgs.forEach((img, i) => {
+      img.style.left = `${w / 2 + centres[i][0] - size / 2}px`;
+      img.style.top = `${h / 2 + centres[i][1] - size / 2}px`;
+    });
+  }
+
+  // n points equally spaced along a superellipse |x/a|^4 + |y/b|^4 = 1 (a rounded rectangle,
+  // which hugs the card's corners better than an ellipse), clockwise from the top
+  const RING_ROUNDNESS = 4;
+  function ellipsePoints(a, b, n) {
+    const STEPS = 1440;
     const pts = [];
     const dist = [0];
+    const bend = v => Math.sign(v) * Math.abs(v) ** (2 / RING_ROUNDNESS);
     for (let k = 0; k <= STEPS; k++) {
       const t = -Math.PI / 2 + (k / STEPS) * 2 * Math.PI;
-      pts.push([a * Math.cos(t), b * Math.sin(t)]);
+      pts.push([a * bend(Math.cos(t)), b * bend(Math.sin(t))]);
       if (k) dist.push(dist[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]));
     }
+    const out = [];
     let k = 0;
-    imgs.forEach((img, i) => {
-      const target = (dist[STEPS] * i) / imgs.length;
+    for (let i = 0; i < n; i++) {
+      const target = (dist[STEPS] * i) / n;
       while (dist[k] < target) k++;
-      img.style.left = `${w / 2 + pts[k][0] - size / 2}px`;
-      img.style.top = `${h / 2 + pts[k][1] - size / 2}px`;
-    });
+      out.push(pts[k]);
+    }
+    return out;
+  }
+
+  // square pictures at these centres stay clear of the card and of each other
+  function ringFits(centres, size, cardW, cardH) {
+    const half = size / 2;
+    for (const [x, y] of centres) {
+      const gap = Math.max(Math.abs(x) - half - cardW / 2, Math.abs(y) - half - cardH / 2);
+      if (gap < RING_GAP) return false;
+    }
+    for (let i = 0; i < centres.length; i++) {
+      const [x1, y1] = centres[i];
+      const [x2, y2] = centres[(i + 1) % centres.length];
+      if (Math.max(Math.abs(x1 - x2), Math.abs(y1 - y2)) < size + PICTURE_GAP) return false;
+    }
+    return true;
   }
 
   function restart() {
