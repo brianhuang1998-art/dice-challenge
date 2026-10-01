@@ -127,7 +127,6 @@
     flex: 0 0 66px;
     align-self: stretch;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     font-family: var(--title-font);
@@ -138,16 +137,6 @@
     text-shadow: 0 2px 0 rgba(0,0,0,0.22);
   }
   .prize-badge small { font-size: 0.75em; margin-left: 1px; }
-  .badge-num { line-height: 1.05; }
-  /* the stage's win chance, shown openly on the ladder */
-  .badge-rate {
-    font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-    font-size: 0.6rem;
-    font-weight: bold;
-    line-height: 1.1;
-    opacity: 0.95;
-    text-shadow: 0 1px 0 rgba(0,0,0,0.25);
-  }
   .prize-name {
     flex: 1;
     text-align: left;
@@ -540,7 +529,7 @@
     text-shadow: 0 2px 0 #fff, 0 4px 6px rgba(194,39,106,0.2);
   }
   .stage-label { color: var(--accent); font-weight: bold; margin-bottom: 10px; font-size: 1.3rem; line-height: 1.2; }
-  .next-prize {  /* room is shared with the win-rate chip */
+  .next-prize {
     display: inline-block;
     margin-left: 10px;
     padding: 2px 12px;
@@ -551,7 +540,7 @@
     background: var(--prize-color, var(--accent));
     border-radius: 999px;
     vertical-align: -4px;
-    max-width: 220px;
+    max-width: 320px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -770,19 +759,7 @@
   }
   .tension-veil.on { opacity: 1; animation: veilBeat 0.85s ease-in-out infinite; }
   @keyframes veilBeat { 15% { opacity: 0.7; } 45% { opacity: 0.85; } }
-  .win-rate {
-    display: inline-block;
-    margin-left: 8px;
-    padding: 1px 10px;
-    font-family: var(--title-font);
-    font-weight: normal;
-    font-size: 0.95rem;
-    color: var(--accent);
-    background: #fff;
-    border: 2px solid #f78bb7;
-    border-radius: 999px;
-    vertical-align: 3px;
-  }
+  .card.tense .next-prize { max-width: 260px; }
 
   .sum-label { margin: 14px 0 6px; opacity: 0.8; font-size: 1.15rem; line-height: 1.4; min-height: 3.22rem; }
   .sum-label.compact { font-size: 0.95rem; min-height: 1.33rem; margin-top: 6px; }
@@ -1179,7 +1156,7 @@
     { wins: 10, name: '전데',      icon: '💖👑', color: '#d61f69', grand: true },
   ];
   const PRIZE_STORE_KEY = 'diceGamePrizes.v2';
-  // Chance (%) of guessing right on each stage, set per stage in the editor and shown on screen.
+  // Chance (%) of guessing right on each stage, set per stage in the editor.
   const DEFAULT_RATE = 50;
   const RATE_CHOICES = Array.from({ length: 19 }, (_, i) => 5 + i * 5);  // 5..95
 
@@ -1331,8 +1308,7 @@
   }
 
   function prizeHtml(p) {
-    return `<span class="prize-badge"><span class="badge-num">${p.wins}<small>승</small></span>`
-      + `<span class="badge-rate">승률 ${p.rate}%</span></span>`
+    return `<span class="prize-badge">${p.wins}<small>승</small></span>`
       + `<span class="prize-name">${esc(p.name)}${p.sub ? `<small>${esc(p.sub)}</small>` : ''}</span>`
       + `<span class="prize-check">GET!</span>`
       + `<span class="prize-icon">${iconHtml(p)}</span>`;
@@ -1403,8 +1379,7 @@
     const last = stage === settings.stages;
     const name = last && tense ? '🔥 마지막 스테이지' : tense ? '🔥 스테이지' : '스테이지';
     stageLabel.innerHTML = `${name} ${stage} / ${settings.stages}`
-      + `<span class="next-prize" style="--prize-color:${esc(p.color)}">🎁 ${prizeLabel(p)}</span>`
-      + `<span class="win-rate" title="이번 스테이지에서 맞힐 확률 · Win chance this stage">승률 ${p.rate}%</span>`;
+      + `<span class="next-prize" style="--prize-color:${esc(p.color)}">🎁 ${prizeLabel(p)}</span>`;
     card.classList.toggle('tense', tense);
     document.documentElement.style.setProperty('--tense', tenseLevel(stage).toFixed(2));
     updateLadder(stage - 1);
