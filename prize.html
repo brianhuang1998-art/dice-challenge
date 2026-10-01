@@ -207,10 +207,11 @@
     flex: 1.35;
     background: linear-gradient(100deg, #ffe3f0, #fff4c9, #e3f4ff, #f1e3ff, #ffe3f0);
   }
-  .prize.grand .prize-badge { background: linear-gradient(180deg, #ff7eb3, #d61f69); }
+  /* grand prize follows its editor color too, with a lighter shine across the name */
+  .prize.grand .prize-badge { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 55%, white), var(--c)); }
   .prize.grand .prize-name {
     font-size: 2rem;
-    background: linear-gradient(90deg, #e0407a, #ff8a00, #e0407a);
+    background: linear-gradient(90deg, var(--c), color-mix(in srgb, var(--c) 65%, white), var(--c));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -922,7 +923,7 @@
     font-size: var(--grand-size, 6.5rem);
     overflow-wrap: anywhere;
     line-height: 1.1;
-    background: linear-gradient(90deg, #e0407a, #ff8a00, #b0247a, #e0407a);
+    background: linear-gradient(90deg, var(--c), color-mix(in srgb, var(--c) 60%, white), color-mix(in srgb, var(--c) 75%, black), var(--c));
     background-size: 200% 100%;
     -webkit-background-clip: text;
     background-clip: text;
@@ -1234,6 +1235,7 @@
     const len = [...grand.name].length;
     grandPrize.style.setProperty('--grand-size', len <= 4 ? '6.5rem' : len <= 8 ? '3.6rem' : '2.4rem');
     grandIcon.innerHTML = iconHtml(grand);
+    grandCard.style.setProperty('--c', grand.color);
   }
   renderPrizes();
 
