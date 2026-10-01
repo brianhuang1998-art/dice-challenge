@@ -880,6 +880,11 @@
     .over-stage { width: 705px; height: 1000px; }  /* portrait: same width as the stacked game */
     /* the tall stage would make a height-filling picture wider than the stage, so size it by width */
     .over-stage .result-img { width: 100%; height: auto; max-height: 100%; align-self: center; }
+    /* smaller chips keep even 9 prizes to two lines, so the picture keeps its full 9:10 size */
+    .over-stage .earned { gap: 5px 6px; }
+    .over-stage .earned-caption { font-size: 0.85rem; }
+    .over-stage .prize-chip { padding: 2px 9px; font-size: 0.85rem; border-width: 1.5px; }
+    .over-stage .prize-chip.kept { font-size: 0.85rem; }
     .final-area .grand-card { width: 400px; }
     .final-area .win-gallery img { width: 90px; height: 90px; }
   }
