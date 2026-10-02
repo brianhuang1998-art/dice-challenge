@@ -573,7 +573,7 @@
     mask-image: radial-gradient(closest-side, #000 72%, transparent 100%);
   }
   .bg-girl.dice  { width: 240px; left: -30px; bottom: -14px; transform-origin: 20% 85%; }
-  .bg-girl.dice.wind-up { animation: girlThrow 0.6s ease-in-out; }
+  .bg-girl.dice.wind-up { animation: girlThrow 0.8s ease-in-out; }
   @keyframes girlThrow {  /* lean back, then forward as the die leaves her hand */
     30% { transform: rotate(-7deg) scale(0.97); }
     55% { transform: rotate(5deg) scale(1.03); }
@@ -589,19 +589,23 @@
     pointer-events: none;
     transform-origin: 0 0;
     transition: opacity 0.35s;
+    perspective: 700px;  /* near corners look bigger than far ones */
+    filter: drop-shadow(0 18px 14px rgba(74, 35, 56, 0.28));
   }
   .hand-die .hand-tilt { width: 260px; height: 260px; transform-style: preserve-3d; transform: rotateX(-24deg) rotateY(32deg) rotateZ(-12deg); }
   .hand-die .dice-cube { transition: none; }
-  .hand-die.flying .dice-cube { animation: handSpin 0.6s linear; }
-  /* flight path comes from --x0..--k3, set by throwHandDie(): hand, wind-up, peak, landing */
-  .card > .hand-die.flying { animation: handFly 0.6s ease-in-out forwards; }
+  /* --throw-ms is set from HAND_THROW_MS in the script */
+  .hand-die.flying .dice-cube { animation: handSpin var(--throw-ms) cubic-bezier(0.25, 0.6, 0.35, 1); }
+  /* flight path comes from --x0..--k4, set by throwHandDie(): hand, wind-up, rising, peak, landing */
+  .card > .hand-die.flying { animation: handFly var(--throw-ms) linear forwards; z-index: 2; }  /* in front of the big dice */
   @keyframes handFly {
-    0%   { transform: translate(var(--x0), var(--y0)) scale(var(--k0)); opacity: 1; }
-    25%  { transform: translate(var(--x1), var(--y1)) scale(var(--k1)); opacity: 1; }
-    62%  { transform: translate(var(--x2), var(--y2)) scale(var(--k2)); opacity: 1; }
-    100% { transform: translate(var(--x3), var(--y3)) scale(var(--k3)); opacity: 0; }
+    0%   { transform: translate(var(--x0), var(--y0)) scale(var(--k0)); opacity: 1; animation-timing-function: ease-in-out; }
+    22%  { transform: translate(var(--x1), var(--y1)) scale(var(--k1)); opacity: 1; animation-timing-function: ease-out; }
+    50%  { transform: translate(var(--x2), var(--y2)) scale(var(--k2)); opacity: 1; animation-timing-function: ease-in-out; }
+    72%  { transform: translate(var(--x3), var(--y3)) scale(var(--k3)); opacity: 1; animation-timing-function: ease-in; }
+    100% { transform: translate(var(--x4), var(--y4)) scale(var(--k4)); opacity: 0; }
   }
-  @keyframes handSpin { to { transform: rotateX(540deg) rotateY(720deg); } }
+  @keyframes handSpin { to { transform: rotateX(720deg) rotateY(540deg) rotateZ(180deg); } }
   .hand-die.gone { opacity: 0; transition: none; }
   .hand-flash {
     position: absolute;
@@ -1418,7 +1422,9 @@
   // ---------- the die in the left character's hand ----------
   // Where the painted die sits in girl-dice.png, as fractions of the picture's width / height.
   const HAND_DIE = { x: 0.227, y: 0.734, size: 0.17 };  // size: the cube's edge; tilted, it looks ~1.35x wider
-  const HAND_THROW_MS = 600;
+  const HAND_THROW_MS = 1100;
+  document.documentElement.style.setProperty('--throw-ms', `${HAND_THROW_MS}ms`);
+  const HAND_TILT = new DOMMatrix('rotateX(-24deg) rotateY(32deg) rotateZ(-12deg)');  // matches .hand-tilt
   const handDie = document.getElementById('handDie');
   const girlDice = document.querySelector('.bg-girl.dice');
   (function buildHandDie() {
@@ -1428,10 +1434,29 @@
       + sides.map(n => `<div class="core core-${n}"></div>`).join('')
       + sides.map(n => `<div class="face face-${n}">${pips}</div>`).join('')
       + '</div></div>';
-    // fixed lighting for its resting pose: front lit, right side and top a little darker
-    const shade = { 1: 0, 2: 0.22, 3: 0.3, 4: 0.12, 5: 0.3, 6: 0.3 };
-    for (const f of handDie.querySelectorAll('.face')) f.style.setProperty('--shade', shade[f.className.match(/face-(\d)/)[1]]);
   })();
+  const handCube = handDie.querySelector('.dice-cube');
+  const handFaces = Array.from(handDie.querySelectorAll('.face'), f => ({
+    el: f,
+    n: FACE_NORMALS[f.className.match(/face-(\d)/)[1]],
+  }));
+
+  // same lighting as the big dice, from its live (possibly spinning) pose
+  function shadeHandDie() {
+    const t = getComputedStyle(handCube).transform;
+    const m = HAND_TILT.multiply(t && t !== 'none' ? new DOMMatrix(t) : new DOMMatrix());
+    for (const f of handFaces) {
+      const p = m.transformPoint(new DOMPoint(f.n[0], f.n[1], f.n[2], 0));
+      const d = (p.x * LIGHT[0] + p.y * LIGHT[1] + p.z * LIGHT[2]) / Math.hypot(p.x, p.y, p.z);
+      f.el.style.setProperty('--shade', (MAX_SHADE * (1 - Math.max(0, d))).toFixed(3));
+    }
+  }
+  shadeHandDie();
+
+  function shadeHandDieWhileFlying() {
+    shadeHandDie();
+    if (handDie.classList.contains('flying')) requestAnimationFrame(shadeHandDieWhileFlying);
+  }
 
   // card-space position of the painted die; the character's size changes between layouts
   function handSpot() {
@@ -1465,13 +1490,14 @@
     const endK = Math.min(1, (row.height / zoom) * 0.6 / 260);
     const toX = (row.left + row.width / 2 - cardBox.left) / zoom - 130 * endK;
     const toY = (row.top + row.height * 0.4 - cardBox.top) / zoom - 130 * endK;
-    const peakY = Math.min(from.y, toY) - 120;
+    const peakY = Math.min(from.y, toY) - 140;
     const mid = (a, b, t) => a + (b - a) * t;
     const path = [
       [from.x, from.y, from.k],
-      [from.x - 14, from.y + 8, from.k * 0.95],  // wind-up
-      [mid(from.x, toX, 0.55), peakY, mid(from.k, endK, 0.55)],
-      [toX, toY, endK],
+      [from.x - 18, from.y + 10, from.k * 0.92],                                   // wind-up
+      [mid(from.x, toX, 0.35), mid(from.y, peakY, 0.8), mid(from.k, endK, 0.35)],  // rising
+      [mid(from.x, toX, 0.7), peakY, mid(from.k, endK, 0.7)],                      // top of the arc
+      [toX, toY, endK],                                                            // dropping onto the dice
     ];
     path.forEach(([x, y, k], i) => {
       handDie.style.setProperty(`--x${i}`, `${x}px`);
@@ -1494,12 +1520,14 @@
     handDie.classList.remove('flying', 'gone');
     void handDie.offsetWidth;  // restart the animation
     handDie.classList.add('flying');
-    setTimeout(() => card.insertBefore(flash, handDie), HAND_THROW_MS * 0.3);  // as it leaves her hand
-    setTimeout(() => flash.remove(), HAND_THROW_MS * 0.3 + 500);
+    requestAnimationFrame(shadeHandDieWhileFlying);
+    setTimeout(() => card.insertBefore(flash, handDie), HAND_THROW_MS * 0.22);  // as it leaves her hand
+    setTimeout(() => flash.remove(), HAND_THROW_MS * 0.22 + 500);
     setTimeout(() => {
       handDie.classList.add('gone');
       handDie.classList.remove('flying');
       placeHandDie();
+      shadeHandDie();  // back to its resting lighting for next time
     }, HAND_THROW_MS);
   }
   const sumLabel = document.getElementById('sumLabel');
