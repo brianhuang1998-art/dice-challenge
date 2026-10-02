@@ -1479,7 +1479,7 @@
     placeHandDie();
   }
 
-  // The small die arcs from her hand to the middle of the two big dice, tumbling and growing,
+  // The small die arcs from her hand to the middle of the two big dice, tumbling at its own size,
   // and fades out as it arrives — the big dice are already rolling by then.
   function throwHandDie() {
     if (!girlDice.offsetWidth) return;
@@ -1487,17 +1487,17 @@
     const cardBox = card.getBoundingClientRect();
     const zoom = cardBox.width / card.offsetWidth;  // the whole layout may be scaled to the window
     const row = diceRow.getBoundingClientRect();
-    const endK = Math.min(1, (row.height / zoom) * 0.6 / 260);
-    const toX = (row.left + row.width / 2 - cardBox.left) / zoom - 130 * endK;
-    const toY = (row.top + row.height * 0.4 - cardBox.top) / zoom - 130 * endK;
+    const k = from.k;  // stays the size it is in her hand all the way
+    const toX = (row.left + row.width / 2 - cardBox.left) / zoom - 130 * k;
+    const toY = (row.top + row.height * 0.4 - cardBox.top) / zoom - 130 * k;
     const peakY = Math.min(from.y, toY) - 140;
     const mid = (a, b, t) => a + (b - a) * t;
     const path = [
-      [from.x, from.y, from.k],
-      [from.x - 18, from.y + 10, from.k * 0.92],                                   // wind-up
-      [mid(from.x, toX, 0.35), mid(from.y, peakY, 0.8), mid(from.k, endK, 0.35)],  // rising
-      [mid(from.x, toX, 0.7), peakY, mid(from.k, endK, 0.7)],                      // top of the arc
-      [toX, toY, endK],                                                            // dropping onto the dice
+      [from.x, from.y, k],
+      [from.x - 18, from.y + 10, k],                          // wind-up
+      [mid(from.x, toX, 0.35), mid(from.y, peakY, 0.8), k],  // rising
+      [mid(from.x, toX, 0.7), peakY, k],                      // top of the arc
+      [toX, toY, k],                                          // dropping onto the dice
     ];
     path.forEach(([x, y, k], i) => {
       handDie.style.setProperty(`--x${i}`, `${x}px`);
