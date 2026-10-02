@@ -34,7 +34,7 @@
     background-color: var(--bg);
     color: var(--text);
     font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    padding: 16px;
+    padding: 8px;  /* matches PAGE_MARGIN in the script */
   }
   .layout {
     display: flex;
@@ -537,8 +537,9 @@
      win picture) over a more compact ladder. */
   @media (max-aspect-ratio: 1/1) {
     .layout { flex-direction: column; }
-    .card { height: 880px; }
-    .ladder { width: 705px; height: auto; }
+    /* --portrait-w: 705px, or wider when the window is wide enough to fill (set by fitToWindow) */
+    .card { height: 880px; width: var(--portrait-w, 705px); }
+    .ladder { width: var(--portrait-w, 705px); height: auto; }
     .prize-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(42px, auto); gap: 7px 14px; }
     /* the wide ladder fits a full run of log entries in two lines; prize list : log is about 82 : 18 */
     .roll-log-list { height: 36px; }
@@ -910,7 +911,7 @@
     row-gap: 12px;
   }
   @media (max-aspect-ratio: 1/1) {
-    .over-stage { width: 705px; height: 1000px; }  /* portrait: same width as the stacked game */
+    .over-stage { width: var(--over-w, 705px); height: 1000px; }  /* portrait: same width as the stacked game */
     /* the tall stage would make a height-filling picture wider than the stage, so size it by width */
     .over-stage .result-img { width: 100%; height: auto; max-height: 100%; align-self: center; }
     /* smaller chips keep even 9 prizes to two lines, so the picture keeps its full 9:10 size */
@@ -2388,10 +2389,25 @@
   });
   restartBtn.addEventListener('click', restart);
 
-  const PAGE_MARGIN = 16;
+  const PAGE_MARGIN = 8;
+  const PORTRAIT_MIN_W = 705;
   const overStage = document.getElementById('overStage');
+  const WIDTH_VAR = new Map();  // element -> the CSS variable holding its portrait width
+
+  // Portrait windows wider than the 705px-wide layout's shape would leave empty margins left
+  // and right; widen the layout (heights unchanged) to the window's shape instead.
+  function widenForPortrait(el) {
+    const name = WIDTH_VAR.get(el);
+    const root = document.documentElement;
+    root.style.removeProperty(name);  // measure at the base width
+    if (!matchMedia('(max-aspect-ratio: 1/1)').matches || !el.offsetHeight) return;
+    const fit = el.offsetHeight * (innerWidth - PAGE_MARGIN * 2) / (innerHeight - PAGE_MARGIN * 2);
+    if (fit > PORTRAIT_MIN_W) root.style.setProperty(name, `${Math.floor(fit)}px`);
+  }
+
   function fitToWindow(el) {
     if (!el.offsetWidth) return;  // hidden right now; fitted again when shown
+    widenForPortrait(el);
     const scale = Math.min(
       1,
       (window.innerWidth - PAGE_MARGIN * 2) / el.offsetWidth,
@@ -2399,6 +2415,7 @@
     );
     el.style.transform = scale < 1 ? `scale(${scale})` : '';
   }
+  WIDTH_VAR.set(layout, '--portrait-w').set(overStage, '--over-w');
   function fitCardToWindow() {
     fitToWindow(layout);
     fitToWindow(overStage);
