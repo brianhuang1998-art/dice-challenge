@@ -130,13 +130,13 @@
     align-items: center;
     justify-content: center;
     font-family: var(--title-font);
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     color: #fff;
     background: linear-gradient(180deg, color-mix(in srgb, var(--c) 70%, white), var(--c));
     border-radius: 11px 0 0 11px;
     text-shadow: 0 2px 0 rgba(0,0,0,0.22);
   }
-  .prize-badge small { font-size: 0.9em; margin-left: 1px; }
+  .prize-badge small { font-size: 1.0em; margin-left: 1px; }
   .prize-name {
     flex: 1;
     text-align: left;
@@ -213,7 +213,7 @@
   /* grand prize follows its editor color too, with a lighter shine across the name */
   .prize.grand .prize-badge { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 55%, white), var(--c)); }
   .prize.grand .prize-name {
-    font-size: 2.2rem;
+    font-size: 2.4rem;
     background: linear-gradient(90deg, var(--c), color-mix(in srgb, var(--c) 65%, white), var(--c));
     -webkit-background-clip: text;
     background-clip: text;
@@ -543,7 +543,7 @@
     /* the wide ladder fits a full run of log entries in two lines; prize list : log is about 82 : 18 */
     .roll-log-list { height: 36px; }
     .prize.grand { grid-column: 1 / -1; }
-    .prize.grand .prize-name { font-size: 1.8rem; }  /* fits the 40px portrait row */
+    .prize.grand .prize-name { font-size: 2.0rem; }  /* fits the 40px portrait row */
     .card .win-img { width: 220px; height: 220px; }
     .card .message.win + .win-img { width: calc(250px + 4.36rem); height: calc(250px + 4.36rem); }
   }
