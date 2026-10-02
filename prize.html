@@ -547,6 +547,11 @@
     .prize.grand .prize-name { font-size: 2.5rem; }
     /* on a widened card the dice grow by --dice-k; the win picture gives up the height they take */
     .dice-row { zoom: var(--dice-k, 1); }
+    /* the three characters are larger in portrait. The top-right one also grows with the card like
+       the dice; the bottom two stay put so they don't climb behind the hint text and the buttons. */
+    .card > .bg-girl.dice  { width: 264px; }
+    .card > .bg-girl.cheer { width: 236px; }
+    .card > .bg-girl.bite  { width: calc(160px * var(--dice-k, 1)); }
     .card .win-img { width: calc(220px - var(--dice-extra, 0px)); height: calc(220px - var(--dice-extra, 0px)); }
     .card .message.win + .win-img {
       width: calc(250px + 4.36rem - var(--dice-extra, 0px));
