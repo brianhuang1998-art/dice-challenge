@@ -141,7 +141,7 @@
     flex: 1;
     text-align: left;
     font-family: var(--title-font);
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     color: var(--c);
     white-space: nowrap;
     min-width: 0;
@@ -531,6 +531,7 @@
     .ladder { width: 705px; height: auto; }
     .prize-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 40px; gap: 7px 14px; }
     .prize.grand { grid-column: 1 / -1; }
+    .prize.grand .prize-name { font-size: 1.6rem; }  /* fits the 40px portrait row */
     .card .win-img { width: 220px; height: 220px; }
     .card .message.win + .win-img { width: calc(250px + 4.36rem); height: calc(250px + 4.36rem); }
   }
@@ -1091,7 +1092,7 @@
   <aside class="ladder" id="ladder">
     <div class="ladder-head">
       <button class="edit-btn" id="editBtn" type="button" title="선물 편집 · Edit prizes">⚙️ 편집</button>
-      <div class="ladder-title">👑 선물 사다리</div>
+      <div class="ladder-title">👑 선물 목록</div>
       <div class="ladder-ribbon">운을 굴려 ❤ 선물을 GET!</div>
     </div>
     <ol class="prize-list" id="prizeList"></ol>
