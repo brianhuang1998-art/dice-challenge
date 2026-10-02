@@ -149,7 +149,7 @@
     text-overflow: ellipsis;
   }
   .prize-name small { font-size: 0.72em; margin-left: 4px; }
-  .prize-icon { font-size: 1.45rem; }
+  .prize-icon { font-size: 1.45rem; white-space: nowrap; }
   .prize-check {
     position: absolute;
     right: 44px;
@@ -319,7 +319,7 @@
   /* a fixed-height box that scrolls, so a long emoji list never squeezes the prize rows */
   .emoji-palette {
     display: flex; flex-wrap: wrap; gap: 4px;
-    max-height: 80px;  /* two rows of 36px buttons */
+    max-height: 156px;  /* four rows of 36px buttons (4 x 36 + 3 x 4 gaps) */
     overflow-y: auto;
     padding-right: 2px;
   }
@@ -329,13 +329,14 @@
     background: #fff; border: 1px solid #f7c6d8; border-radius: 8px;
   }
   .emoji-palette button:hover { background: #ffe4ee; }
-  .editor-rows { overflow-y: auto; padding: 10px 22px; display: flex; flex-direction: column; gap: 8px; }
+  /* prize rows: compact (about 80% of the original height) */
+  .editor-rows { overflow-y: auto; padding: 10px 22px; display: flex; flex-direction: column; gap: 6px; }
   .ed-row {
     display: grid;
-    grid-template-columns: 54px minmax(0, 1fr) 76px 56px auto 44px 92px;
+    grid-template-columns: 50px minmax(0, 1fr) 76px 96px auto 36px 92px;
     gap: 8px;
     align-items: center;
-    padding: 6px;
+    padding: 4px 6px;
     background: #fff;
     border: 2px solid color-mix(in srgb, var(--c) 35%, white);
     border-radius: 14px;
@@ -344,35 +345,37 @@
   .ed-badge {
     align-self: stretch;
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--title-font); font-size: 1.15rem; color: #fff;
+    font-family: var(--title-font); font-size: 1rem; color: #fff;
     background: var(--c); border-radius: 10px;
   }
   .ed-row input[type=text] {
     width: 100%;
     min-width: 0;
-    padding: 8px 10px;
+    padding: 5px 9px;
     font: inherit;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     color: var(--text);
     border: 1.5px solid #ecd3de;
     border-radius: 9px;
     background: #fffafc;
   }
   .ed-row input[type=text]:focus { outline: 2px solid var(--c); border-color: transparent; }
-  .ed-row .ed-icon { text-align: center; font-size: 1.2rem; padding: 6px 4px; }
-  .ed-preview {
-    width: 40px; height: 40px;
+  .ed-row .ed-icon { text-align: center; font-size: 1.05rem; padding: 4px 4px; }
+  .ed-preview {  /* fixed width (fits 4 emoji) so every row's columns line up */
+    width: 88px; height: 32px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
   }
-  .ed-preview .prize-img { width: 36px; height: 36px; }
+  .ed-preview .prize-img { width: 30px; height: 30px; }
   .ed-tools { display: flex; gap: 4px; align-items: center; }
-  .ed-tools .ed-btn { padding: 7px 9px; font-size: 0.8rem; }
+  .ed-tools .ed-btn { padding: 5px 8px; font-size: 0.78rem; }
   .ed-rate {
     width: 100%;
-    padding: 8px 4px;
+    padding: 5px 4px;
     font: inherit;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: bold;
     color: var(--c);
     background: #fffafc;
@@ -380,8 +383,8 @@
     border-radius: 9px;
   }
   .ed-color-btn {
-    width: 40px; height: 40px;
-    padding: 4px;
+    width: 32px; height: 32px;
+    padding: 3px;
     background: #fff;
     border: 1.5px solid #ecd3de;
     border-radius: 10px;
@@ -499,7 +502,8 @@
       grid-template-columns: 44px minmax(0, 1fr) 70px;
       grid-template-areas:
         "badge name  name"
-        "icon  tools sub"
+        "icon  icon  sub"
+        "tools tools tools"
         "color rate  rate";
     }
     .ed-row .ed-badge { grid-area: badge; }
@@ -510,7 +514,7 @@
     .ed-row .ed-color-btn { grid-area: color; }
     .ed-row .ed-rate { grid-area: rate; justify-self: start; width: auto; min-width: 120px; }
     /* every emoji still shown, just smaller, so the palette stays short and leaves room for the prize rows */
-    .emoji-palette { gap: 3px; max-height: 113px; }  /* four rows of 26px buttons */
+    .emoji-palette { gap: 3px; max-height: 84px; }  /* three rows of 26px buttons (3 x 26 + 2 x 3 gaps) */
     .emoji-palette button { width: 26px; height: 26px; font-size: 0.9rem; border-radius: 6px; }
     .editor-foot { flex-wrap: wrap; }
     .ed-btn .en { display: none; }
@@ -1944,21 +1948,21 @@
   const emojiPalette = document.getElementById('emojiPalette');
   const PALETTE = [
     // gifts & love
-    '🎁', '💖', '💌', '💝', '💕', '💘', '😘', '🥰', '💋', '💍', '💎', '👑', '🎀', '🧸', '🌹', '💐', '🌸',
+    '🎁', '💖', '💌', '💝', '💕', '💘', '😘', '🥰', '💋', '💍', '💎', '👑', '🎀', '🧸', '🌹', '💐', '🌸', '💗', '💓', '😍', '🤗',
     // photos & video
-    '📸', '🤳', '🖼️', '🎞️', '🎥', '📹', '📺',
+    '📸', '🤳', '🖼️', '🎞️', '🎥', '📹', '📺', '📷', '🎬',
     // stars & party
-    '⭐', '🌟', '✨', '🎉', '🎊', '🏆', '🥇', '🔥', '💯',
+    '⭐', '🌟', '✨', '🎉', '🎊', '🏆', '🥇', '🔥', '💯', '🎈', '🥂',
     // dance, music & performance
-    '🪩', '💃', '🕺', '🎤', '🎵', '🎶', '🎧', '🎹', '🎸',
+    '🪩', '💃', '🕺', '🎤', '🎵', '🎶', '🎧', '🎹', '🎸', '🥁', '🎻',
     // challenges & fitness
-    '🏋️', '💪', '🏃', '🤸', '🎯', '🎲',
+    '🏋️', '💪', '🏃', '🤸', '🎯', '🎲', '⚽', '🏀', '🧘',
     // messages & calls
-    '💬', '📞', '📱', '✍️', '📝', '💌',
+    '💬', '📞', '📱', '✍️', '📝', '📩', '💭',
     // food & drink
-    '🍰', '🎂', '🍫', '🍬', '🍭', '🍦', '🍓', '🍗', '🍕', '🍜', '☕', '🧋', '🍺',
+    '🍰', '🎂', '🍫', '🍬', '🍭', '🍦', '🍓', '🍗', '🍕', '🍜', '☕', '🧋', '🍺', '🍩', '🍪', '🍉', '🍣', '🍔', '🍷',
     // fun & games
-    '🎨', '🎮', '🍀', '🐶', '🐱', '🐰', '🦄', '🎃', '💸', '💰', '🎟️',
+    '🎨', '🎮', '🍀', '🐶', '🐱', '🐰', '🦄', '🎃', '💸', '💰', '🎟️', '🐻', '🌈',
   ].filter((e, i, all) => all.indexOf(e) === i);  // no duplicates
   let draft = [];
   let draftSettings = { ...DEFAULT_SETTINGS };
@@ -2005,13 +2009,28 @@
     draftSettings.tenseFrom = Number(setTense.value);
   });
 
+  // Each prize can show several emoji. Counted as whole emoji (graphemes), not code units,
+  // so 🏋️ or 👨‍👩‍👧 count as one.
+  const MAX_ICON_EMOJI = 4;
+  const graphemeSplitter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+  function emojiList(text) {
+    return [...graphemeSplitter.segment(String(text ?? '').replace(/\s+/g, ''))].map(g => g.segment);
+  }
+
   for (const e of PALETTE) {
     const b = document.createElement('button');
     b.type = 'button';
     b.textContent = e;
-    b.addEventListener('click', () => {
-      draft[activeRow].icon = e;
-      draft[activeRow].img = '';
+    b.addEventListener('click', () => {  // adds to the row's icon, up to MAX_ICON_EMOJI
+      const p = draft[activeRow];
+      const current = p.img ? [] : emojiList(p.icon);
+      if (current.length >= MAX_ICON_EMOJI) {
+        editorNote.textContent = `아이콘은 최대 ${MAX_ICON_EMOJI}개까지 넣을 수 있어요.`;
+        return;
+      }
+      p.icon = [...current, e].join('');
+      p.img = '';
+      editorNote.textContent = '';
       buildEditorRows();
     });
     emojiPalette.appendChild(b);
@@ -2067,11 +2086,11 @@
         <span class="ed-badge">${winsLabel(i)}승</span>
         <input type="text" class="ed-name" maxlength="20" placeholder="선물 이름 Prize" value="${esc(p.name)}">
         <input type="text" class="ed-sub" maxlength="8" placeholder="수량" title="수량 (선택) · e.g. 2장" value="${esc(p.sub)}">
-        <input type="text" class="ed-icon" maxlength="16" placeholder="🎁" value="${p.img ? '' : esc(p.icon)}" title="이모지 아이콘">
+        <input type="text" class="ed-icon" placeholder="🎁" value="${p.img ? '' : esc(p.icon)}" title="이모지 아이콘 (최대 ${MAX_ICON_EMOJI}개)">
         <span class="ed-tools">
           <span class="ed-preview">${iconHtml(p)}</span>
           <button type="button" class="ed-btn ghost ed-upload">🖼️ 이미지</button>
-          ${p.img ? '<button type="button" class="ed-btn ghost ed-clear" title="이미지 삭제">✕</button>' : ''}
+          ${p.img || p.icon ? '<button type="button" class="ed-btn ghost ed-clear" title="아이콘 지우기 · Clear icon">✕</button>' : ''}
           <input type="file" accept="image/*" hidden>
         </span>
         <button type="button" class="ed-color-btn" title="색상 Color" aria-label="색상 선택"><span class="ed-swatch"></span></button>
@@ -2089,6 +2108,8 @@
       q('.ed-sub').addEventListener('input', e => { p.sub = e.target.value; });
       q('.ed-rate').addEventListener('change', e => { p.rate = Number(e.target.value); updateOdds(); });
       q('.ed-icon').addEventListener('input', e => {
+        const list = emojiList(e.target.value);
+        if (list.length > MAX_ICON_EMOJI) e.target.value = list.slice(0, MAX_ICON_EMOJI).join('');
         p.icon = e.target.value;
         p.img = '';
         q('.ed-preview').innerHTML = iconHtml(p);
@@ -2105,7 +2126,12 @@
           editorNote.textContent = '이미지를 읽을 수 없어요.';
         }
       });
-      q('.ed-clear')?.addEventListener('click', () => { p.img = ''; buildEditorRows(); });
+      q('.ed-clear')?.addEventListener('click', () => {  // empty icon: start picking emoji afresh
+        p.img = '';
+        p.icon = '';
+        activeRow = i;
+        buildEditorRows();
+      });
       editorRows.appendChild(row);
     }
   }
