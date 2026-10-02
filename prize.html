@@ -500,17 +500,18 @@
     /* three lines per prize: name + amount / preview + emoji + image upload / colour + win rate.
        The emoji field (column 2) is just wide enough for four emoji. */
     .ed-row {
-      grid-template-columns: 56px 84px minmax(0, 1fr) 70px;
+      grid-template-columns: 64px 96px minmax(0, 1fr) 70px;
       grid-template-areas:
         "badge   name name  sub"
         "preview icon tools tools"
         "color   rate rate  rate";
       gap: 6px;
     }
-    .ed-row .ed-preview { grid-area: preview; width: 100%; height: 30px; font-size: 0.7rem; }
+    .ed-row .ed-preview { grid-area: preview; width: 100%; height: 30px; font-size: 0.8rem; }
     .ed-row .ed-preview .prize-img { width: 26px; height: 26px; }
     .ed-row .ed-color-btn { justify-self: start; }
-    .ed-row input.ed-icon { padding: 4px 3px; }  /* slim padding so four emoji fit the 84px column */
+    .ed-row input.ed-icon { padding: 4px 5px; }
+    .editor-rows { padding: 10px 12px; }  /* narrower side margins give the preview and emoji columns room */
     .ed-row .ed-badge { grid-area: badge; }
     .ed-row .ed-name { grid-area: name; }
     .ed-row .ed-sub { grid-area: sub; }
