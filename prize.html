@@ -572,7 +572,46 @@
     -webkit-mask-image: radial-gradient(closest-side, #000 72%, transparent 100%);
     mask-image: radial-gradient(closest-side, #000 72%, transparent 100%);
   }
-  .bg-girl.dice  { width: 240px; left: -30px; bottom: -14px; }
+  .bg-girl.dice  { width: 240px; left: -30px; bottom: -14px; transform-origin: 20% 85%; }
+  .bg-girl.dice.wind-up { animation: girlThrow 0.6s ease-in-out; }
+  @keyframes girlThrow {  /* lean back, then forward as the die leaves her hand */
+    30% { transform: rotate(-7deg) scale(0.97); }
+    55% { transform: rotate(5deg) scale(1.03); }
+  }
+  /* a small 3D die laid over the one painted in her hand; thrown at the big dice on each roll */
+  .card > .hand-die {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 0;  /* above the character (earlier in the card), under the game controls */
+    width: 260px;
+    height: 260px;
+    pointer-events: none;
+    transform-origin: 0 0;
+    transition: opacity 0.35s;
+  }
+  .hand-die .hand-tilt { width: 260px; height: 260px; transform-style: preserve-3d; transform: rotateX(-24deg) rotateY(32deg) rotateZ(-12deg); }
+  .hand-die .dice-cube { transition: none; }
+  .hand-die.flying .dice-cube { animation: handSpin 0.6s linear; }
+  /* flight path comes from --x0..--k3, set by throwHandDie(): hand, wind-up, peak, landing */
+  .card > .hand-die.flying { animation: handFly 0.6s ease-in-out forwards; }
+  @keyframes handFly {
+    0%   { transform: translate(var(--x0), var(--y0)) scale(var(--k0)); opacity: 1; }
+    25%  { transform: translate(var(--x1), var(--y1)) scale(var(--k1)); opacity: 1; }
+    62%  { transform: translate(var(--x2), var(--y2)) scale(var(--k2)); opacity: 1; }
+    100% { transform: translate(var(--x3), var(--y3)) scale(var(--k3)); opacity: 0; }
+  }
+  @keyframes handSpin { to { transform: rotateX(540deg) rotateY(720deg); } }
+  .hand-die.gone { opacity: 0; transition: none; }
+  .hand-flash {
+    position: absolute;
+    z-index: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,214,232,0.7) 40%, transparent 70%);
+    animation: handFlash 0.45s ease-out forwards;
+  }
+  @keyframes handFlash { from { transform: scale(0.4); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
   .bg-girl.cheer { width: 200px; right: -26px; bottom: -18px; }
   .bg-girl.bite  { width: 124px; right: -18px; top: -18px; }  /* top-right corner */
   #gameArea {
@@ -1101,6 +1140,7 @@
     <img class="bg-girl dice" src="girl-dice.png" alt="">
     <img class="bg-girl cheer" src="girl-cheer.png" alt="">
     <img class="bg-girl bite" src="girl-bite.png" alt="">
+    <div class="hand-die" id="handDie" aria-hidden="true"></div>
     <h1 id="title">🎲 주사위 홀짝게임 <span class="en">Dice Odd · Even</span></h1>
     <div class="stage-label" id="stageLabel">스테이지 1 / 10</div>
 
@@ -1374,6 +1414,94 @@
   buildDie(pedestal2, 'cube2');
   const cube1 = document.getElementById('cube1');
   const cube2 = document.getElementById('cube2');
+
+  // ---------- the die in the left character's hand ----------
+  // Where the painted die sits in girl-dice.png, as fractions of the picture's width / height.
+  const HAND_DIE = { x: 0.227, y: 0.734, size: 0.17 };  // size: the cube's edge; tilted, it looks ~1.35x wider
+  const HAND_THROW_MS = 600;
+  const handDie = document.getElementById('handDie');
+  const girlDice = document.querySelector('.bg-girl.dice');
+  (function buildHandDie() {
+    const pips = '<span class="pip"></span>'.repeat(9);
+    const sides = [1, 2, 3, 4, 5, 6];
+    handDie.innerHTML = '<div class="hand-tilt"><div class="dice-cube">'
+      + sides.map(n => `<div class="core core-${n}"></div>`).join('')
+      + sides.map(n => `<div class="face face-${n}">${pips}</div>`).join('')
+      + '</div></div>';
+    // fixed lighting for its resting pose: front lit, right side and top a little darker
+    const shade = { 1: 0, 2: 0.22, 3: 0.3, 4: 0.12, 5: 0.3, 6: 0.3 };
+    for (const f of handDie.querySelectorAll('.face')) f.style.setProperty('--shade', shade[f.className.match(/face-(\d)/)[1]]);
+  })();
+
+  // card-space position of the painted die; the character's size changes between layouts
+  function handSpot() {
+    const size = girlDice.offsetWidth * HAND_DIE.size;
+    return {
+      x: girlDice.offsetLeft + girlDice.offsetWidth * HAND_DIE.x - size / 2,
+      y: girlDice.offsetTop + girlDice.offsetHeight * HAND_DIE.y - size / 2,
+      k: size / 260,
+    };
+  }
+
+  function placeHandDie() {
+    if (handDie.classList.contains('flying')) return;
+    const { x, y, k } = handSpot();
+    handDie.style.transform = `translate(${x}px, ${y}px) scale(${k})`;
+  }
+
+  function showHandDie() {
+    handDie.classList.remove('gone', 'flying');
+    placeHandDie();
+  }
+
+  // The small die arcs from her hand to the middle of the two big dice, tumbling and growing,
+  // and fades out as it arrives — the big dice are already rolling by then.
+  function throwHandDie() {
+    if (!girlDice.offsetWidth) return;
+    const from = handSpot();
+    const cardBox = card.getBoundingClientRect();
+    const zoom = cardBox.width / card.offsetWidth;  // the whole layout may be scaled to the window
+    const row = diceRow.getBoundingClientRect();
+    const endK = Math.min(1, (row.height / zoom) * 0.6 / 260);
+    const toX = (row.left + row.width / 2 - cardBox.left) / zoom - 130 * endK;
+    const toY = (row.top + row.height * 0.4 - cardBox.top) / zoom - 130 * endK;
+    const peakY = Math.min(from.y, toY) - 120;
+    const mid = (a, b, t) => a + (b - a) * t;
+    const path = [
+      [from.x, from.y, from.k],
+      [from.x - 14, from.y + 8, from.k * 0.95],  // wind-up
+      [mid(from.x, toX, 0.55), peakY, mid(from.k, endK, 0.55)],
+      [toX, toY, endK],
+    ];
+    path.forEach(([x, y, k], i) => {
+      handDie.style.setProperty(`--x${i}`, `${x}px`);
+      handDie.style.setProperty(`--y${i}`, `${y}px`);
+      handDie.style.setProperty(`--k${i}`, k);
+    });
+
+    girlDice.classList.remove('wind-up');
+    void girlDice.offsetWidth;
+    girlDice.classList.add('wind-up');
+
+    const flash = document.createElement('div');
+    const fs = from.k * 260 * 1.6;
+    flash.className = 'hand-flash';
+    Object.assign(flash.style, {
+      width: `${fs}px`, height: `${fs}px`,
+      left: `${from.x + from.k * 130 - fs / 2}px`, top: `${from.y + from.k * 130 - fs / 2}px`,
+    });
+
+    handDie.classList.remove('flying', 'gone');
+    void handDie.offsetWidth;  // restart the animation
+    handDie.classList.add('flying');
+    setTimeout(() => card.insertBefore(flash, handDie), HAND_THROW_MS * 0.3);  // as it leaves her hand
+    setTimeout(() => flash.remove(), HAND_THROW_MS * 0.3 + 500);
+    setTimeout(() => {
+      handDie.classList.add('gone');
+      handDie.classList.remove('flying');
+      placeHandDie();
+    }, HAND_THROW_MS);
+  }
   const sumLabel = document.getElementById('sumLabel');
   const message = document.getElementById('message');
   const btnOdd = document.getElementById('btnOdd');
@@ -1642,6 +1770,7 @@
     const t = rollTiming(stage);
     spinCubeTo(cube1, cubeState1, a, t.first);
     spinCubeTo(cube2, cubeState2, b, t.second);
+    throwHandDie();
     setTension(isTense(stage));
 
     setTimeout(() => {
@@ -1777,6 +1906,7 @@
   }
 
   function resetRoundControls() {
+    showHandDie();  // a fresh die back in her hand for the next round
     selectedGuess = null;
     btnOdd.classList.remove('selected');
     btnEven.classList.remove('selected');
@@ -2448,6 +2578,7 @@
   WIDTH_VAR.set(layout, '--portrait-w').set(overStage, '--over-w');
   function fitCardToWindow() {
     fitToWindow(layout);
+    placeHandDie();  // the character's size differs between layouts
     fitToWindow(overStage);
     layoutWinGallery();
   }
