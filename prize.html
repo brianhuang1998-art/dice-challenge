@@ -545,8 +545,13 @@
     .roll-log-list { height: 36px; }
     .prize.grand { grid-column: 1 / -1; min-height: 58px; }  /* taller row for the larger grand name */
     .prize.grand .prize-name { font-size: 2.5rem; }
-    .card .win-img { width: 220px; height: 220px; }
-    .card .message.win + .win-img { width: calc(250px + 4.36rem); height: calc(250px + 4.36rem); }
+    /* on a widened card the dice grow by --dice-k; the win picture gives up the height they take */
+    .dice-row { zoom: var(--dice-k, 1); }
+    .card .win-img { width: calc(220px - var(--dice-extra, 0px)); height: calc(220px - var(--dice-extra, 0px)); }
+    .card .message.win + .win-img {
+      width: calc(250px + 4.36rem - var(--dice-extra, 0px));
+      height: calc(250px + 4.36rem - var(--dice-extra, 0px));
+    }
   }
   .card > * { position: relative; z-index: 1; }
   .card > .bg-girl {
@@ -2396,13 +2401,25 @@
 
   // Portrait windows wider than the 705px-wide layout's shape would leave empty margins left
   // and right; widen the layout (heights unchanged) to the window's shape instead.
+  const DICE_MAX_K = 1.3;  // the dice grow at most this much; beyond it the win picture would get too small
   function widenForPortrait(el) {
     const name = WIDTH_VAR.get(el);
     const root = document.documentElement;
     root.style.removeProperty(name);  // measure at the base width
+    if (el === layout) {
+      root.style.removeProperty('--dice-k');
+      root.style.removeProperty('--dice-extra');
+    }
     if (!matchMedia('(max-aspect-ratio: 1/1)').matches || !el.offsetHeight) return;
     const fit = el.offsetHeight * (innerWidth - PAGE_MARGIN * 2) / (innerHeight - PAGE_MARGIN * 2);
-    if (fit > PORTRAIT_MIN_W) root.style.setProperty(name, `${Math.floor(fit)}px`);
+    if (fit <= PORTRAIT_MIN_W) return;
+    root.style.setProperty(name, `${Math.floor(fit)}px`);
+    if (el === layout) {
+      // keep the dice about as wide a share of the card as at the base width
+      const k = Math.min(DICE_MAX_K, fit / PORTRAIT_MIN_W);
+      root.style.setProperty('--dice-extra', `${Math.round(diceRow.offsetHeight * (k - 1))}px`);
+      root.style.setProperty('--dice-k', k.toFixed(3));
+    }
   }
 
   function fitToWindow(el) {
