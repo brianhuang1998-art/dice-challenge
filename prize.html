@@ -1422,7 +1422,7 @@
   // ---------- the die in the left character's hand ----------
   // Where the painted die sits in girl-dice.png, as fractions of the picture's width / height.
   const HAND_DIE = { x: 0.227, y: 0.734, size: 0.17 };  // size: the cube's edge; tilted, it looks ~1.35x wider
-  const HAND_THROW_MS = 1100;
+  const HAND_THROW_MS = 1000;
   document.documentElement.style.setProperty('--throw-ms', `${HAND_THROW_MS}ms`);
   const HAND_TILT = new DOMMatrix('rotateX(-24deg) rotateY(32deg) rotateZ(-12deg)');  // matches .hand-tilt
   const handDie = document.getElementById('handDie');
