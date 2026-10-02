@@ -497,15 +497,17 @@
   }
   .editor-note { flex: 1; font-size: 0.82rem; color: var(--danger); }
   @media (max-width: 620px) {
-    /* three short lines per prize so every field, including the full win-rate text, fits */
+    /* three lines per prize: name + amount / emoji + image upload / colour + win rate */
     .ed-row {
-      grid-template-columns: 44px minmax(0, 1fr) 70px;
+      grid-template-columns: 44px minmax(0, 1fr) 64px 70px;
       grid-template-areas:
-        "badge name  name"
-        "icon  icon  sub"
-        "tools tools tools"
-        "color rate  rate";
+        "badge name name  sub"
+        "icon  icon tools tools"
+        "color rate rate  rate";
     }
+    /* the emoji field already shows the emoji; the preview only earns its room for an uploaded picture */
+    .ed-row .ed-preview { display: none; width: auto; }
+    .ed-row .ed-preview.has-img { display: flex; }
     .ed-row .ed-badge { grid-area: badge; }
     .ed-row .ed-name { grid-area: name; }
     .ed-row .ed-sub { grid-area: sub; }
@@ -2088,7 +2090,7 @@
         <input type="text" class="ed-sub" maxlength="8" placeholder="수량" title="수량 (선택) · e.g. 2장" value="${esc(p.sub)}">
         <input type="text" class="ed-icon" placeholder="🎁" value="${p.img ? '' : esc(p.icon)}" title="이모지 아이콘 (최대 ${MAX_ICON_EMOJI}개)">
         <span class="ed-tools">
-          <span class="ed-preview">${iconHtml(p)}</span>
+          <span class="ed-preview${p.img ? ' has-img' : ''}">${iconHtml(p)}</span>
           <button type="button" class="ed-btn ghost ed-upload">🖼️ 이미지</button>
           ${p.img || p.icon ? '<button type="button" class="ed-btn ghost ed-clear" title="아이콘 지우기 · Clear icon">✕</button>' : ''}
           <input type="file" accept="image/*" hidden>
@@ -2113,6 +2115,7 @@
         p.icon = e.target.value;
         p.img = '';
         q('.ed-preview').innerHTML = iconHtml(p);
+        q('.ed-preview').classList.remove('has-img');
       });
       q('.ed-color-btn').addEventListener('click', e => toggleColorPop(i, e.currentTarget));
       const file = q('input[type=file]');
