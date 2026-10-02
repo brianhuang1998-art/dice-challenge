@@ -860,6 +860,8 @@
     box-shadow: 0 3px 0 #d79a12, 0 5px 10px rgba(215,154,18,0.35);
   }
   .cash-out .en { font-family: inherit; font-size: 0.8em; margin-left: 4px; }
+  /* long prize names are cut with … so the button stays clear of the two characters */
+  .cash-prize { display: inline-block; max-width: 84px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
   .cash-out.confirm {
     color: #fff;
     background: linear-gradient(180deg, #ff8fb5, #e0407a);
@@ -1723,7 +1725,8 @@
     clearTimeout(cashOutTimer);
     cashOutTimer = null;
     cashOutBtn.classList.remove('confirm');
-    cashOutBtn.innerHTML = `🎁 그만하고 받기 (${stage - 1}개) <span class="en">Cash out</span>`;
+    // cashing out keeps only the prize of the stage just cleared
+    cashOutBtn.innerHTML = `🎁 그만하고 받기 · <span class="cash-prize">${prizeLabel(ladder[stage - 2] || ladder[0])}</span> <span class="en">Cash out</span>`;
   }
 
   cashOutBtn.addEventListener('click', () => {
@@ -1738,16 +1741,18 @@
     cashOut();
   });
 
+  // Rule: stopping keeps only the last cleared stage's prize, not every prize so far.
   function cashOut() {
     const wins = stage - 1;
+    const prize = ladder[wins - 1];
     locked = true;
     editBtn.disabled = true;
     showOverScreen(
-      `${wins}승에서 멈췄어요! 선물 ${wins}개 GET! <span class="en">You stopped at ${wins} wins and keep ${wins} prizes!</span>`,
+      `${wins}승에서 멈췄어요! 🎁 ${prizeLabel(prize)} GET! <span class="en">You stopped at ${wins} wins and take this prize!</span>`,
       'win',
       randomWinImg(),
     );
-    showPrizeChips(wins, true);
+    showPrizeChips([prize], true);
     heartRain();
   }
 
@@ -1791,11 +1796,12 @@
       'lose',
       imgUrl(Math.floor(Math.random() * LOSE_IMG_COUNT) + 1),
     );
-    showPrizeChips(lostAtStage - 1, false);  // rule: losing a round forfeits every prize so far
+    showPrizeChips(ladder.slice(0, lostAtStage - 1), false);  // rule: losing a round forfeits every prize so far
   }
 
-  // kept: prizes taken home with 그만하고 받기; otherwise they are shown crossed out.
-  function showPrizeChips(wins, kept) {
+  // list: the prizes to show; kept = taken home with 그만하고 받기, otherwise crossed out as lost
+  function showPrizeChips(list, kept) {
+    const wins = list.length;
     if (wins === 0) {
       earned.innerHTML = '<div class="earned-none">선물 없음 😢 다시 도전!</div>';
       return;
@@ -1803,11 +1809,11 @@
     const cap = document.createElement('div');
     cap.className = 'earned-caption';
     cap.innerHTML = kept
-      ? `🎁 받은 선물 ${wins}개 <span class="en">Your prizes</span>`
+      ? `🎁 받은 선물 <span class="en">Your prize</span>`
       : `💔 누적 선물 ${wins}개 모두 소멸! <span class="en">All prizes lost</span>`;
     const chips = document.createElement('div');
     chips.className = 'prize-chips';
-    for (const p of ladder.slice(0, wins)) {
+    for (const p of list) {
       const chip = document.createElement('span');
       chip.className = 'prize-chip ' + (kept ? 'kept' : 'lost');
       chip.style.setProperty('--c', p.color);
