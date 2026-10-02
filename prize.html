@@ -510,12 +510,17 @@
     .ed-btn .en { display: none; }
   }
 
-  /* portrait screens: ladder moves under the game as a two-column grid */
+  /* portrait screens: ladder moves under the game as a two-column grid.
+     Game card : ladder is about 65 : 35 — a taller card (its extra height goes to the
+     win picture) over a more compact ladder. */
   @media (max-aspect-ratio: 1/1) {
     .layout { flex-direction: column; }
+    .card { height: 880px; }
     .ladder { width: 705px; height: auto; }
-    .prize-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 52px; gap: 10px 14px; }
+    .prize-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 40px; gap: 7px 14px; }
     .prize.grand { grid-column: 1 / -1; }
+    .card .win-img { width: 220px; height: 220px; }
+    .card .message.win + .win-img { width: calc(250px + 4.36rem); height: calc(250px + 4.36rem); }
   }
   .card > * { position: relative; z-index: 1; }
   .card > .bg-girl {
