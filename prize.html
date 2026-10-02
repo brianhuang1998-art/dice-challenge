@@ -316,7 +316,13 @@
     border-radius: 8px;
   }
   .set-odds { font-size: 0.8rem; font-weight: normal; opacity: 0.75; }
-  .emoji-palette { display: flex; flex-wrap: wrap; gap: 4px; }
+  /* a fixed-height box that scrolls, so a long emoji list never squeezes the prize rows */
+  .emoji-palette {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    max-height: 80px;  /* two rows of 36px buttons */
+    overflow-y: auto;
+    padding-right: 2px;
+  }
   .emoji-palette button {
     width: 36px; height: 36px; padding: 0;
     font-size: 1.2rem; line-height: 1;
@@ -504,7 +510,7 @@
     .ed-row .ed-color-btn { grid-area: color; }
     .ed-row .ed-rate { grid-area: rate; justify-self: start; width: auto; min-width: 120px; }
     /* every emoji still shown, just smaller, so the palette stays short and leaves room for the prize rows */
-    .emoji-palette { gap: 3px; }
+    .emoji-palette { gap: 3px; max-height: 113px; }  /* four rows of 26px buttons */
     .emoji-palette button { width: 26px; height: 26px; font-size: 0.9rem; border-radius: 6px; }
     .editor-foot { flex-wrap: wrap; }
     .ed-btn .en { display: none; }
@@ -1936,8 +1942,24 @@
   const editorRows = document.getElementById('editorRows');
   const editorNote = document.getElementById('editorNote');
   const emojiPalette = document.getElementById('emojiPalette');
-  const PALETTE = ['🎁', '💖', '💌', '📸', '🖼️', '🎞️', '⭐', '🌟', '👑', '💎', '🪩', '💃', '🎤', '🎵',
-    '🏋️', '🎨', '💬', '📞', '🍰', '🍫', '☕', '🧸', '🌹', '💐', '🎀', '💍', '🍀', '🎮', '✍️', '💋'];
+  const PALETTE = [
+    // gifts & love
+    '🎁', '💖', '💌', '💝', '💕', '💘', '😘', '🥰', '💋', '💍', '💎', '👑', '🎀', '🧸', '🌹', '💐', '🌸',
+    // photos & video
+    '📸', '🤳', '🖼️', '🎞️', '🎥', '📹', '📺',
+    // stars & party
+    '⭐', '🌟', '✨', '🎉', '🎊', '🏆', '🥇', '🔥', '💯',
+    // dance, music & performance
+    '🪩', '💃', '🕺', '🎤', '🎵', '🎶', '🎧', '🎹', '🎸',
+    // challenges & fitness
+    '🏋️', '💪', '🏃', '🤸', '🎯', '🎲',
+    // messages & calls
+    '💬', '📞', '📱', '✍️', '📝', '💌',
+    // food & drink
+    '🍰', '🎂', '🍫', '🍬', '🍭', '🍦', '🍓', '🍗', '🍕', '🍜', '☕', '🧋', '🍺',
+    // fun & games
+    '🎨', '🎮', '🍀', '🐶', '🐱', '🐰', '🦄', '🎃', '💸', '💰', '🎟️',
+  ].filter((e, i, all) => all.indexOf(e) === i);  // no duplicates
   let draft = [];
   let draftSettings = { ...DEFAULT_SETTINGS };
   let activeRow = 0;
