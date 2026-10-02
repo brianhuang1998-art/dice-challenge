@@ -552,6 +552,11 @@
     .card > .bg-girl.dice  { width: 264px; }
     .card > .bg-girl.cheer { width: 236px; }
     .card > .bg-girl.bite  { width: calc(160px * var(--dice-k, 1)); }
+    /* bigger odd / even and cash-out buttons, still clear of the two bottom characters */
+    .card .guess-btn { width: 150px; padding: 16px 0; font-size: 1.25rem; }
+    .card .guess-row { gap: 14px; zoom: var(--dice-k, 1); }  /* grows with a widened card, like the dice */
+    .card .cash-out { bottom: 88px; padding: 8px 18px; font-size: 1.05rem; zoom: var(--dice-k, 1); }
+    .card .cash-prize { max-width: 92px; }
     .card .win-img { width: calc(220px - var(--dice-extra, 0px)); height: calc(220px - var(--dice-extra, 0px)); }
     .card .message.win + .win-img {
       width: calc(250px + 4.36rem - var(--dice-extra, 0px));
