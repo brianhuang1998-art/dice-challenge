@@ -503,9 +503,9 @@
     .ed-row .ed-tools { grid-area: tools; }
     .ed-row .ed-color-btn { grid-area: color; }
     .ed-row .ed-rate { grid-area: rate; justify-self: start; width: auto; min-width: 120px; }
-    /* one swipeable line of emoji instead of five wrapped ones, leaving room for the prize rows */
-    .emoji-palette { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
-    .emoji-palette button { flex: 0 0 36px; }
+    /* every emoji still shown, just smaller, so the palette stays short and leaves room for the prize rows */
+    .emoji-palette { gap: 3px; }
+    .emoji-palette button { width: 26px; height: 26px; font-size: 0.9rem; border-radius: 6px; }
     .editor-foot { flex-wrap: wrap; }
     .ed-btn .en { display: none; }
   }
