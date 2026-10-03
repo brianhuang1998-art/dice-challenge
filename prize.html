@@ -1851,8 +1851,9 @@
     } else {
       message.innerHTML = '틀렸습니다. 게임 종료! <span class="en">Wrong guess. Game over!</span>';
       message.classList.add('lose');
-      // only the last cleared stage's prize is lost, matching 그만하고 받기 (which keeps only that one)
-      prizeEls[stage - 2]?.classList.replace('done', 'lost');
+      prizeEls.forEach(el => {
+        if (el.classList.contains('done')) el.classList.replace('done', 'lost');
+      });
       setTimeout(() => showLose(stage), 1400);
     }
   }
