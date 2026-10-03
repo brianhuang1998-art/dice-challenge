@@ -1851,9 +1851,8 @@
     } else {
       message.innerHTML = '틀렸습니다. 게임 종료! <span class="en">Wrong guess. Game over!</span>';
       message.classList.add('lose');
-      prizeEls.forEach(el => {
-        if (el.classList.contains('done')) el.classList.replace('done', 'lost');
-      });
+      // only the last cleared stage's prize is lost, matching 그만하고 받기 (which keeps only that one)
+      prizeEls[stage - 2]?.classList.replace('done', 'lost');
       setTimeout(() => showLose(stage), 1400);
     }
   }
@@ -1974,7 +1973,8 @@
       'lose',
       imgUrl(Math.floor(Math.random() * LOSE_IMG_COUNT) + 1),
     );
-    showPrizeChips(ladder.slice(0, lostAtStage - 1), false);  // rule: losing a round forfeits every prize so far
+    // rule: losing forfeits the last cleared stage's prize
+    showPrizeChips(lostAtStage > 1 ? [ladder[lostAtStage - 2]] : [], false);
   }
 
   // list: the prizes to show; kept = taken home with 그만하고 받기, otherwise crossed out as lost
@@ -1989,7 +1989,7 @@
     cap.className = 'earned-caption';
     cap.innerHTML = kept
       ? `🎁 받은 선물 <span class="en">Your prize</span>`
-      : `💔 누적 선물 ${wins}개 모두 소멸! <span class="en">All prizes lost</span>`;
+      : `💔 선물 소멸! <span class="en">Prize lost</span>`;
     const chips = document.createElement('div');
     chips.className = 'prize-chips';
     for (const p of list) {
