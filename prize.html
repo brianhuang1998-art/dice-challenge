@@ -976,8 +976,8 @@
     .over-stage .earned { gap: 5px 6px; }
     .over-stage .earned-caption { font-size: 0.85rem; }
     .over-stage .prize-chip { padding: 2px 9px; font-size: 0.85rem; border-width: 1.5px; }
-    .over-stage .prize-chip.kept { font-size: 1.6rem; padding: 5px 18px; border-width: 2px; }
-    .over-stage .earned.kept-view .earned-caption { font-size: 1.3rem; }
+    .over-stage .earned.single-view .prize-chip { font-size: 1.6rem; padding: 5px 18px; border-width: 2px; }
+    .over-stage .earned.single-view .earned-caption { font-size: 1.3rem; }
     .final-area .grand-card { width: 400px; }
     .final-area .win-gallery img { width: 90px; height: 90px; }
   }
@@ -1053,8 +1053,10 @@
     text-decoration-thickness: 2px;
     opacity: 0.75;
   }
-  .prize-chip.kept { font-size: 1.7rem; padding: 6px 20px; background: color-mix(in srgb, var(--c) 10%, white); }
-  .earned.kept-view .earned-caption { font-size: 1.4rem; }
+  .prize-chip.kept { background: color-mix(in srgb, var(--c) 10%, white); }
+  /* the single prize taken home or lost is shown large */
+  .earned.single-view .prize-chip { font-size: 1.7rem; padding: 6px 20px; }
+  .earned.single-view .earned-caption { font-size: 1.4rem; }
   .prize-chip .prize-img { width: 1.3em; height: 1.3em; }
   .earned-none { font-family: var(--title-font); font-size: 2.2rem; color: #9b6b84; }
 
@@ -1980,7 +1982,7 @@
 
   // list: the prizes to show; kept = taken home with 그만하고 받기, otherwise crossed out as lost
   function showPrizeChips(list, kept) {
-    earned.classList.toggle('kept-view', kept);  // the one prize taken home is shown large
+    earned.classList.toggle('single-view', list.length === 1);
     const wins = list.length;
     if (wins === 0) {
       earned.innerHTML = '<div class="earned-none">선물 없음 😢 다시 도전!</div>';
