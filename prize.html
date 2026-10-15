@@ -6,7 +6,1139 @@
 <title>주사위 홀짝게임</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<style>
+  :root {
+    --bg: #ffd6e8;
+    --panel: #fff8fb;
+    --panel-border: #f490ba;
+    --accent: #e8306f;
+    --danger: #c81e3c;
+    --text: #4a2338;
+    --btn-text: #ffffff;
+    --title-font: "Jua", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(255,255,255,0.7) 0 2px, transparent 3px) 0 0 / 46px 46px,
+      radial-gradient(circle at 70% 60%, rgba(255,255,255,0.55) 0 1.5px, transparent 2.5px) 0 0 / 34px 34px,
+      linear-gradient(160deg, #ffc4dc 0%, #ffdfec 45%, #f8c0e1 100%);
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    padding: 10px;  /* matches PAGE_MARGIN in the script */
+  }
+  .layout {
+    display: flex;
+    gap: 15px;
+    align-items: stretch;
+    flex-shrink: 0;
+  }
+  .card {
+    background: var(--panel);
+    border: 3px solid var(--panel-border);
+    border-radius: 28px;
+    padding: 20px 48px;
+    width: 705px;
+    height: 800px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    box-shadow: 0 0 0 6px rgba(255,255,255,0.7), 0 14px 34px rgba(224,64,122,0.22);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ---------- prize ladder (from the 주사위 홀짝게임 poster) ---------- */
+  .ladder {
+    width: 344px;
+    height: 800px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 18px 16px;
+    background: rgba(255,248,251,0.92);
+    border: 3px solid var(--panel-border);
+    border-radius: 28px;
+    box-shadow: 0 0 0 6px rgba(255,255,255,0.7), 0 14px 34px rgba(224,64,122,0.22);
+  }
+  .ladder-head {
+    position: relative;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .ladder-title {
+    font-family: var(--title-font);
+    font-size: 1.75rem;
+    line-height: 1.1;
+    background: linear-gradient(180deg, #ff5f9e, #b0247a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 2px 0 #fff) drop-shadow(0 3px 2px rgba(176,36,122,0.25));
+  }
+  .ladder-ribbon {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 16px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--accent);
+    background: #fff;
+    border: 2px solid #f78bb7;
+    border-radius: 999px;
+  }
+  .prize-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;  /* short ladders (fewer stages) sit in the middle */
+    gap: 6px;
+  }
+  .prize {
+    --c: #888;
+    flex: 1;
+    max-height: 76px;  /* rows stop growing when there are only a few stages */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px 0 0;
+    background: #fffdf8;
+    border: 2px solid color-mix(in srgb, var(--c) 35%, white);
+    border-radius: 14px;
+    position: relative;
+    opacity: 0.8;
+    transition: opacity 0.3s, filter 0.3s, transform 0.3s, box-shadow 0.3s;
+  }
+  .prize-badge {
+    flex: 0 0 66px;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--title-font);
+    font-size: 1.65rem;
+    color: #fff;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--c) 70%, white), var(--c));
+    border-radius: 11px 0 0 11px;
+    text-shadow: 0 2px 0 rgba(0,0,0,0.22);
+  }
+  .prize-badge small { font-size: 1.0em; margin-left: 1px; }
+  .prize-name {
+    flex: 1;
+    text-align: left;
+    font-family: var(--title-font);
+    font-size: 1.85rem;
+    color: var(--c);
+    white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .prize-name small { font-size: 0.95em; margin-left: 4px; }
+  .prize-icon { font-size: 1.45rem; white-space: nowrap; }
+  .prize-check {
+    position: absolute;
+    right: 44px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-12deg) scale(0);
+    padding: 1px 8px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--c);
+    border: 2px solid var(--c);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.85);
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .prize.done { opacity: 1; filter: none; }
+  .prize.lost {
+    opacity: 0.4;
+    filter: grayscale(1);
+    animation: prizeLost 0.6s ease-out;
+  }
+  .prize.lost .prize-name { text-decoration: line-through 3px; }
+  @keyframes prizeLost {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(3px); }
+  }
+  .prize.done .prize-check { transform: translateY(-50%) rotate(-12deg) scale(1); }
+  .prize.current {
+    opacity: 1;
+    filter: none;
+    transform: scale(1.04);
+    box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--c), 0 6px 16px color-mix(in srgb, var(--c) 45%, transparent);
+    animation: prizePulse 1.4s ease-in-out infinite;
+    z-index: 1;
+  }
+  .prize.current::before {
+    content: '▶';
+    position: absolute;
+    left: -16px;
+    color: var(--c);
+    font-size: 0.9rem;
+  }
+  @keyframes prizePulse {
+    0%, 100% { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--c), 0 6px 16px color-mix(in srgb, var(--c) 45%, transparent); }
+    50%      { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--c), 0 6px 26px color-mix(in srgb, var(--c) 75%, transparent); }
+  }
+  .prize.just-won { animation: prizeWon 0.9s ease-out; }
+  @keyframes prizeWon {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.12) rotate(-1.5deg); background: color-mix(in srgb, var(--c) 18%, white); }
+    60%  { transform: scale(0.98) rotate(1deg); }
+    100% { transform: scale(1); }
+  }
+  .prize.grand {
+    flex: 1.35;
+    max-height: 100px;
+    background: linear-gradient(100deg, #ffe3f0, #fff4c9, #e3f4ff, #f1e3ff, #ffe3f0);
+  }
+  /* grand prize follows its editor color too, with a lighter shine across the name */
+  .prize.grand .prize-badge { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 55%, white), var(--c)); }
+  .prize.grand .prize-name {
+    font-size: 2.45rem;
+    background: linear-gradient(90deg, var(--c), color-mix(in srgb, var(--c) 65%, white), var(--c));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .prize.grand .prize-icon { font-size: 1.9rem; }
+
+  /* roll log under the ladder: small print, newest at the bottom */
+  .roll-log {
+    flex: 0 0 auto;
+    padding-top: 5px;
+    border-top: 2px dashed #f7c6d8;
+    text-align: left;
+  }
+  .roll-log-title { font-size: 0.64rem; font-weight: bold; color: #9b6b84; margin-bottom: 3px; }
+  .roll-log-title .en { margin-left: 4px; }
+  .roll-log-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    height: 52px;  /* three rows, a full 10-stage run; scrolls after that */
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 2px 3px;
+  }
+  .roll-log-list li {
+    padding: 0 3px;  /* slim enough for four entries per line, so a full run takes three lines */
+    font-size: 0.65rem;
+    line-height: 1.35;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    background: #fff;
+    border: 1px solid #ecd3de;
+    border-radius: 999px;
+  }
+  .roll-log-list li.win  { color: #2e7d32; border-color: #b9dfbb; }
+  .roll-log-list li.lose { color: var(--danger); border-color: #f3b5c0; }
+  .roll-log-list li.empty { border-style: dashed; opacity: 0.55; }
+  /* the ✓ / ✗ result mark, larger than the rest of the entry */
+  .log-mark { font-size: 1.5em; font-weight: bold; line-height: 0; }
+
+  .prize-img { width: 1.6em; height: 1.6em; object-fit: contain; vertical-align: middle; border-radius: 6px; }
+  .grand-heart .prize-img { width: 64px; height: 64px; }
+
+  .edit-btn {
+    position: absolute;
+    z-index: 2;  /* .ladder-title's filter paints it above earlier positioned siblings */
+    right: -6px;
+    top: -8px;
+    padding: 5px 11px;
+    font-size: 0.82rem;
+    font-weight: bold;
+    color: var(--accent);
+    background: #fff;
+    border: 2px solid #f78bb7;
+    border-radius: 999px;
+  }
+  .edit-btn:hover { background: #ffe4ee; }
+  .edit-btn::after { content: ''; position: absolute; inset: -8px; }  /* bigger touch target */
+  .edit-btn:disabled { opacity: 0.4; }
+
+  .editor {
+    width: min(840px, calc(100vw - 24px));
+    max-height: calc(100vh - 24px);
+    padding: 0;
+    border: 3px solid var(--panel-border);
+    border-radius: 24px;
+    background: var(--panel);
+    color: var(--text);
+    box-shadow: 0 20px 60px rgba(176,36,122,0.35);
+  }
+  .editor::backdrop { background: rgba(74,35,56,0.45); }
+  .editor form { display: flex; flex-direction: column; max-height: calc(100vh - 30px); }
+  .editor-head { padding: 18px 22px 10px; border-bottom: 2px dashed #f7c6d8; }
+  .editor-head h2 { margin: 0 0 4px; font-family: var(--title-font); font-weight: normal; font-size: 1.6rem; color: #d21c6a; }
+  .editor-head p { margin: 0 0 10px; font-size: 0.88rem; line-height: 1.45; opacity: 0.85; }
+  .editor-head p .en { display: block; margin: 0; }
+  .game-settings {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 18px;
+    margin: 0 0 10px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    background: #fff;
+    border: 1.5px solid #f7c6d8;
+    border-radius: 12px;
+  }
+  .game-settings label { display: flex; align-items: center; gap: 6px; }
+  .game-settings .en { margin-left: 0; font-size: 0.85em; }
+  .game-settings select {
+    padding: 5px 8px;
+    font: inherit;
+    font-weight: normal;
+    color: var(--text);
+    background: #fffafc;
+    border: 1.5px solid #ecd3de;
+    border-radius: 8px;
+  }
+  .set-odds { font-size: 0.8rem; font-weight: normal; opacity: 0.75; }
+  /* a fixed-height box that scrolls, so a long emoji list never squeezes the prize rows */
+  .emoji-palette {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    max-height: 156px;  /* four rows of 36px buttons (4 x 36 + 3 x 4 gaps) */
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .emoji-palette button {
+    width: 36px; height: 36px; padding: 0;
+    font-size: 1.2rem; line-height: 1;
+    background: #fff; border: 1px solid #f7c6d8; border-radius: 8px;
+  }
+  .emoji-palette button:hover { background: #ffe4ee; }
+  /* prize rows: compact (about 80% of the original height) */
+  .editor-rows { overflow-y: auto; padding: 10px 22px; display: flex; flex-direction: column; gap: 6px; }
+  .ed-row {
+    display: grid;
+    grid-template-columns: 50px minmax(0, 1fr) 76px 96px 88px auto 36px 92px;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 6px;
+    background: #fff;
+    border: 2px solid color-mix(in srgb, var(--c) 35%, white);
+    border-radius: 14px;
+  }
+  .ed-row.active { box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 45%, transparent); }
+  .ed-badge {
+    align-self: stretch;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--title-font); font-size: 1rem; color: #fff;
+    background: var(--c); border-radius: 10px;
+  }
+  .ed-row input[type=text] {
+    width: 100%;
+    min-width: 0;
+    padding: 5px 9px;
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--text);
+    border: 1.5px solid #ecd3de;
+    border-radius: 9px;
+    background: #fffafc;
+  }
+  .ed-row input[type=text]:focus { outline: 2px solid var(--c); border-color: transparent; }
+  .ed-row .ed-icon { text-align: center; font-size: 1.05rem; padding: 4px 4px; }
+  .ed-preview {  /* fixed width (fits 4 emoji) so every row's columns line up */
+    width: 88px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .ed-preview .prize-img { width: 30px; height: 30px; }
+  .ed-tools { display: flex; gap: 4px; align-items: center; }
+  .ed-tools .ed-btn { padding: 5px 8px; font-size: 0.78rem; }
+  .ed-rate {
+    width: 100%;
+    padding: 5px 4px;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: bold;
+    color: var(--c);
+    background: #fffafc;
+    border: 1.5px solid #ecd3de;
+    border-radius: 9px;
+  }
+  .ed-color-btn {
+    width: 32px; height: 32px;
+    padding: 3px;
+    background: #fff;
+    border: 1.5px solid #ecd3de;
+    border-radius: 10px;
+  }
+  .ed-color-btn.open { border-color: var(--c); box-shadow: 0 0 0 2px var(--c); }
+  .ed-swatch {
+    display: block;
+    width: 100%; height: 100%;
+    border-radius: 6px;
+    background: var(--c);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+  }
+
+  /* color picker pop-up: presets, a hue x lightness grid, and the lightness slider */
+  .color-pop {
+    position: fixed;
+    z-index: 10;
+    width: 332px;
+    padding: 10px;
+    background: rgba(250,246,248,0.97);
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 16px;
+    box-shadow: 0 14px 40px rgba(74,35,56,0.35);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+  .color-pop[hidden] { display: none; }
+  .cp-presets, .cp-grid { display: grid; grid-template-columns: repeat(12, 1fr); overflow: hidden; }
+  .cp-presets { border-radius: 10px; margin-bottom: 8px; box-shadow: 0 0 0 1px rgba(0,0,0,0.1); }
+  .cp-grid { border-radius: 10px; box-shadow: 0 0 0 1px rgba(0,0,0,0.1); }
+  .cp-cell {
+    aspect-ratio: 1;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: var(--cell);
+    cursor: pointer;
+    position: relative;
+  }
+  .cp-presets .cp-cell { aspect-ratio: 1 / 1.1; }
+  .cp-cell:hover { z-index: 1; box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(0,0,0,0.5); }
+  .cp-cell.selected { z-index: 2; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #222; }
+  .cp-cell:active { transform: none; }
+  .cp-shade-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 2px 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #6b5260;
+  }
+  .cp-shade-row .ed-shade { --c: var(--pop-c); }
+  .cp-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .cp-preview {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--pop-c);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+  }
+  .cp-hex { flex: 1; font-family: ui-monospace, Menlo, monospace; font-size: 0.85rem; color: #6b5260; }
+  .color-pop .ed-btn.cp-more { padding: 3px 9px; font-size: 0.7rem; border-width: 1.5px; }
+  .cp-native { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  /* lightness slider: track runs from the darkest to the lightest version of the picked color */
+  .ed-shade {
+    flex: 1;
+    min-width: 0;
+    height: 10px;
+    margin: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--shade-dark), var(--shade-base), var(--shade-light));
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15);
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  .ed-shade::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--c);
+    border: 3px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  }
+  .ed-shade::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--c);
+    border: 3px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  }
+  .ed-btn {
+    padding: 9px 16px;
+    font-size: 0.95rem;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .ed-btn .en { margin-left: 4px; }
+  .ed-btn.primary { background: var(--accent); color: #fff; }
+  .ed-btn.ghost { background: #fff; color: var(--accent); border: 2px solid #f78bb7; }
+  .editor-foot {
+    display: flex; gap: 8px; align-items: center;
+    padding: 12px 22px 16px;
+    border-top: 2px dashed #f7c6d8;
+  }
+  .editor-note { flex: 1; font-size: 0.82rem; color: var(--danger); }
+  @media (max-width: 620px) {
+    /* three lines per prize: name + amount / preview + emoji + image upload / colour + win rate.
+       The emoji field (column 2) is just wide enough for four emoji. */
+    .ed-row {
+      grid-template-columns: 72px 106px minmax(0, 1fr) 70px;
+      grid-template-areas:
+        "badge   name name  sub"
+        "preview icon tools tools"
+        "color   rate rate  rate";
+      gap: 6px;
+    }
+    .ed-row .ed-preview { grid-area: preview; width: 100%; height: 30px; font-size: 0.88rem; }
+    .ed-row .ed-preview .prize-img { width: 26px; height: 26px; }
+    .ed-row .ed-color-btn { justify-self: start; }
+    .ed-row input.ed-icon { padding: 4px 5px; }
+    .editor-rows { padding: 10px 12px; }  /* narrower side margins give the preview and emoji columns room */
+    /* slimmer upload / clear buttons leave the room to the preview and emoji columns */
+    .ed-tools { gap: 3px; }
+    .ed-tools .ed-btn { padding: 5px 5px; font-size: 0.74rem; }
+    .ed-tools .ed-clear { padding: 5px 4px; }
+    .ed-row .ed-badge { grid-area: badge; }
+    .ed-row .ed-name { grid-area: name; }
+    .ed-row .ed-sub { grid-area: sub; }
+    .ed-row .ed-icon { grid-area: icon; }
+    .ed-row .ed-tools { grid-area: tools; }
+    .ed-row .ed-color-btn { grid-area: color; }
+    .ed-row .ed-rate { grid-area: rate; justify-self: start; width: auto; min-width: 120px; }
+    /* every emoji still shown, just smaller, so the palette stays short and leaves room for the prize rows */
+    .emoji-palette { gap: 3px; max-height: 84px; }  /* three rows of 26px buttons (3 x 26 + 2 x 3 gaps) */
+    .emoji-palette button { width: 26px; height: 26px; font-size: 0.9rem; border-radius: 6px; }
+    .editor-foot { flex-wrap: wrap; }
+    .ed-btn .en { display: none; }
+  }
+
+  /* portrait screens: ladder moves under the game as a two-column grid.
+     Game card : ladder is about 65 : 35 — a taller card (its extra height goes to the
+     win picture) over a more compact ladder. */
+  @media (max-aspect-ratio: 1/1) {
+    .layout { flex-direction: column; }
+    /* --portrait-w: 705px, or wider when the window is wide enough to fill (set by fitToWindow) */
+    .card { height: 880px; width: var(--portrait-w, 705px); }
+    .ladder { width: var(--portrait-w, 705px); height: auto; }
+    .prize-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(42px, auto); gap: 7px 14px; }
+    /* the wide ladder fits a full run of log entries in two lines; prize list : log is about 82 : 18 */
+    .roll-log-list { height: 36px; }
+    .prize.grand { grid-column: 1 / -1; min-height: 58px; }  /* taller row for the larger grand name */
+    .prize.grand .prize-name { font-size: 2.5rem; }
+    /* on a widened card the dice grow by --dice-k; the win picture gives up the height they take */
+    .dice-row { zoom: var(--dice-k, 1); }
+    /* the three characters are larger in portrait. The top-right one also grows with the card like
+       the dice; the bottom two stay put so they don't climb behind the hint text and the buttons. */
+    .card > .bg-girl.dice  { width: 264px; }
+    .card > .bg-girl.cheer { width: 236px; }
+    .card > .bg-girl.bite  { width: calc(160px * var(--dice-k, 1)); }
+    /* bigger odd / even and cash-out buttons, still clear of the two bottom characters */
+    .card .guess-btn { width: 150px; padding: 16px 0; font-size: 1.25rem; }
+    .card .guess-row { gap: 14px; zoom: var(--dice-k, 1); }  /* grows with a widened card, like the dice */
+    .card .cash-out { bottom: 88px; padding: 8px 18px; font-size: 1.05rem; zoom: var(--dice-k, 1); }
+    .card .cash-prize { max-width: 92px; }
+    .card .win-img { width: calc(220px - var(--dice-extra, 0px)); height: calc(220px - var(--dice-extra, 0px)); }
+    .card .message.win + .win-img {
+      width: calc(250px + 4.36rem - var(--dice-extra, 0px));
+      height: calc(250px + 4.36rem - var(--dice-extra, 0px));
+    }
+  }
+  .card > * { position: relative; z-index: 1; }
+  .card > .bg-girl {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    /* fade the image's own pink frame into the card */
+    -webkit-mask-image: radial-gradient(closest-side, #000 72%, transparent 100%);
+    mask-image: radial-gradient(closest-side, #000 72%, transparent 100%);
+  }
+  .bg-girl.dice  { width: 240px; left: -30px; bottom: -14px; transform-origin: 20% 85%; }
+  .bg-girl.dice.wind-up { animation: girlThrow 0.8s ease-in-out; }
+  @keyframes girlThrow {  /* lean back, then forward as the die leaves her hand */
+    30% { transform: rotate(-7deg) scale(0.97); }
+    55% { transform: rotate(5deg) scale(1.03); }
+  }
+  /* a small 3D die laid over the one painted in her hand; thrown at the big dice on each roll */
+  .card > .hand-die {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 0;  /* above the character (earlier in the card), under the game controls */
+    width: 260px;
+    height: 260px;
+    pointer-events: none;
+    transform-origin: 0 0;
+    transition: opacity 0.35s;
+    perspective: 700px;  /* near corners look bigger than far ones */
+    filter: drop-shadow(0 18px 14px rgba(74, 35, 56, 0.28));
+  }
+  .hand-die .hand-tilt { width: 260px; height: 260px; transform-style: preserve-3d; transform: rotateX(-24deg) rotateY(32deg) rotateZ(-12deg); }
+  .hand-die .dice-cube { transition: none; }
+  /* --throw-ms is set from HAND_THROW_MS in the script */
+  .hand-die.flying .dice-cube { animation: handSpin var(--throw-ms) cubic-bezier(0.25, 0.6, 0.35, 1); }
+  /* flight path comes from --x0..--k4, set by throwHandDie(): hand, wind-up, rising, peak, landing */
+  .card > .hand-die.flying { animation: handFly var(--throw-ms) linear forwards; z-index: 2; }  /* in front of the big dice */
+  @keyframes handFly {
+    0%   { transform: translate(var(--x0), var(--y0)) scale(var(--k0)); opacity: 1; animation-timing-function: ease-in-out; }
+    22%  { transform: translate(var(--x1), var(--y1)) scale(var(--k1)); opacity: 1; animation-timing-function: ease-out; }
+    50%  { transform: translate(var(--x2), var(--y2)) scale(var(--k2)); opacity: 1; animation-timing-function: ease-in-out; }
+    72%  { transform: translate(var(--x3), var(--y3)) scale(var(--k3)); opacity: 1; animation-timing-function: ease-in; }
+    100% { transform: translate(var(--x4), var(--y4)) scale(var(--k4)); opacity: 0; }
+  }
+  @keyframes handSpin { to { transform: rotateX(720deg) rotateY(540deg) rotateZ(180deg); } }
+  .hand-die.gone { opacity: 0; transition: none; }
+  .hand-flash {
+    position: absolute;
+    z-index: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,214,232,0.7) 40%, transparent 70%);
+    animation: handFlash 0.45s ease-out forwards;
+  }
+  @keyframes handFlash { from { transform: scale(0.4); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
+  .bg-girl.cheer { width: 200px; right: -26px; bottom: -18px; }
+  .bg-girl.bite  { width: 124px; right: -18px; top: -18px; }  /* top-right corner */
+  #gameArea {
+    flex: 1;
+    min-height: 0;  /* lets .win-img give up height if the content ever runs long */
+    display: flex;
+    flex-direction: column;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-family: var(--title-font);
+    font-weight: normal;
+    font-size: 2.3rem;
+    line-height: 1.2;
+    color: #d21c6a;
+    text-shadow: 0 2px 0 #fff, 0 4px 6px rgba(194,39,106,0.2);
+  }
+  .stage-label { color: var(--accent); font-weight: bold; margin-bottom: 10px; font-size: 1.3rem; line-height: 1.2; }
+  .next-prize {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 12px;
+    font-family: var(--title-font);
+    font-weight: normal;
+    font-size: 1.05rem;
+    color: #fff;
+    background: var(--prize-color, var(--accent));
+    border-radius: 999px;
+    vertical-align: -4px;
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dice-row {
+    display: flex;
+    justify-content: center;
+    gap: 56px;
+    margin: 12px 0 4px;
+  }
+  .dice-row:focus-visible { outline: 3px dashed var(--accent); outline-offset: 6px; border-radius: 20px; }
+  .dice-row.ready { cursor: pointer; }
+  .dice-row.rolling {
+    pointer-events: none;
+  }
+  .dice-row.ready .dice-pedestal, .dice-pedestal.landed {
+    opacity: 1;
+    filter: none;
+  }
+  /* each die is faded until a guess is picked, and while rolling until it lands */
+  .dice-pedestal {
+    opacity: 0.6;
+    filter: grayscale(0.45);
+    transition: opacity 0.3s, filter 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .dice-scene {
+    width: 260px;
+    height: 260px;
+    perspective: 1000px;
+    transition: transform 0.25s ease-out;
+  }
+  /* touch screens keep :hover stuck after a tap, so only lift the die for real pointers */
+  @media (hover: hover) {
+    .dice-row.ready .dice-pedestal:hover .dice-scene {
+      transform: translateY(-14px) scale(1.04);
+    }
+    .dice-row.ready .dice-pedestal:hover .dice-shadow {
+      transform: scale(0.8);
+      opacity: 0.6;
+    }
+  }
+  .dice-row.ready .dice-pedestal {
+    animation: readyFloat 1.6s ease-in-out infinite;
+  }
+  @keyframes readyFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .dice-shadow {
+    width: 176px;
+    height: 30px;
+    margin-top: 15px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.2) 45%, rgba(0,0,0,0) 72%);
+    transition: transform 0.4s ease, opacity 0.4s ease;
+  }
+  .dice-pedestal.bounce .dice-shadow {
+    animation: shadowPulse 0.9s ease-out;
+  }
+  @keyframes shadowPulse {
+    0%   { transform: scale(1.15); opacity: 0.32; }  /* impact 1 */
+    8%   { transform: scale(0.55); opacity: 0.10; }  /* airborne, peak 1 */
+    16%  { transform: scale(1.1);  opacity: 0.30; }  /* impact 2 */
+    24%  { transform: scale(0.7);  opacity: 0.14; }  /* airborne, peak 2 */
+    32%  { transform: scale(1.05); opacity: 0.27; }  /* impact 3 */
+    40%  { transform: scale(0.85); opacity: 0.18; }  /* airborne, peak 3 */
+    48%, 100% { transform: scale(1); opacity: 0.25; } /* settled */
+  }
+  .dice-pedestal.bounce .dice-scene {
+    animation: diceBounce 0.9s ease-out;
+  }
+  @keyframes diceBounce {
+    0%   { transform: translateY(0)     scale(1, 0.92); }              /* impact 1: squash */
+    8%   { transform: translateY(-54px) scale(1.03, 1.03); }           /* bounce 1: biggest */
+    16%  { transform: translateY(0)     scale(1.04, 0.95); }           /* impact 2: squash, smaller */
+    24%  { transform: translateY(-27px) scale(1.015, 1.015); }         /* bounce 2: ~half of bounce 1 */
+    32%  { transform: translateY(0)     scale(1.02, 0.97); }           /* impact 3: squash, tiny */
+    40%  { transform: translateY(-13px) scale(1.007, 1.007) rotate(0deg); } /* bounce 3: small */
+    48%  { transform: translateY(0)     scale(1) rotate(0deg); }       /* settled, micro-jitter starts */
+    58%  { transform: translateY(-1px)  scale(1) rotate(1.4deg); }
+    66%  { transform: translateY(0)     scale(1) rotate(-1.1deg); }
+    74%  { transform: translateY(-0.6px) scale(1) rotate(0.7deg); }
+    82%  { transform: translateY(0)     scale(1) rotate(-0.4deg); }
+    90%  { transform: translateY(-0.3px) scale(1) rotate(0.2deg); }
+    100% { transform: translateY(0)     scale(1) rotate(0deg); }
+  }
+  /* fixed camera angle so the top and right faces show; set from VIEW_TILT in the script */
+  .dice-view {
+    width: 260px;
+    height: 260px;
+    transform-style: preserve-3d;
+  }
+  .dice-cube {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    transform-style: preserve-3d;
+    transform: matrix3d(1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1) rotateX(0deg) rotateY(0deg);
+    transition: transform var(--roll-duration, 1.5s) cubic-bezier(0.22, 1, 0.36, 1);  /* set from ROLL_MS */
+  }
+  .dice-cube.tilting {
+    transition: none;
+  }
+  .face {
+    position: absolute;
+    width: 260px;
+    height: 260px;
+    left: 0;
+    top: 0;
+    background: radial-gradient(120% 120% at 30% 25%, #ffffff 0%, #fff4f8 50%, #f6dce6 100%);
+    border-radius: 34px;
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,0.12),
+      inset 6px 6px 10px rgba(255,255,255,0.9),
+      inset -6px -6px 14px rgba(0,0,0,0.12);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    padding: 30px;
+  }
+  /* lighting: --shade is set per face from its angle to the light */
+  .face::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgb(20, 24, 32);
+    opacity: var(--shade, 0);
+    pointer-events: none;
+  }
+  /* solid inner block that shows through the rounded corners instead of a hole;
+     its own rounding keeps it tucked behind the outer faces when seen head-on */
+  .core {
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    left: 5px;
+    top: 5px;
+    border-radius: 24px;
+    background: #ebc3d2;
+  }
+  .core-1 { transform: translateZ(125px); }
+  .core-6 { transform: rotateY(180deg) translateZ(125px); }
+  .core-2 { transform: rotateY(90deg) translateZ(125px); }
+  .core-5 { transform: rotateY(-90deg) translateZ(125px); }
+  .core-3 { transform: rotateX(-90deg) translateZ(125px); }
+  .core-4 { transform: rotateX(90deg) translateZ(125px); }
+  .pip {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 38%, #8a0f3a 0%, #d6336c 62%, #f06595 100%);
+    /* dark top rim + light bottom lip reads as a drilled hole */
+    box-shadow:
+      inset 0 4px 6px rgba(0,0,0,0.7),
+      inset 0 -2px 3px rgba(255,255,255,0.18),
+      0 1px 1px rgba(255,255,255,0.9);
+    justify-self: center;
+    align-self: center;
+    opacity: 0;
+  }
+  .face-1 .pip:nth-child(5) {
+    width: 96px;
+    height: 96px;
+    border-radius: 0;
+    background: radial-gradient(circle at 40% 30%, #ff8fb5 0%, #e11d5c 55%, #a3123f 100%);
+    box-shadow: none;
+    /* heart-shaped pip for the 1, like the poster's dice */
+    clip-path: path('M48 88 C20 66 4 50 4 30 C4 15 15 4 29 4 C38 4 45 9 48 16 C51 9 58 4 67 4 C81 4 92 15 92 30 C92 50 76 66 48 88 Z');
+  }
+  /* physical layout: opposite faces sum to 7 */
+  .face-1 { transform: translateZ(130px); }
+  .face-6 { transform: rotateY(180deg) translateZ(130px); }
+  .face-2 { transform: rotateY(90deg) translateZ(130px); }
+  .face-5 { transform: rotateY(-90deg) translateZ(130px); }
+  .face-3 { transform: rotateX(-90deg) translateZ(130px); }
+  .face-4 { transform: rotateX(90deg) translateZ(130px); }
+
+  .face-1 .pip:nth-child(5) { opacity: 1; }
+  .face-2 .pip:nth-child(1), .face-2 .pip:nth-child(9) { opacity: 1; }
+  .face-3 .pip:nth-child(1), .face-3 .pip:nth-child(5), .face-3 .pip:nth-child(9) { opacity: 1; }
+  .face-4 .pip:nth-child(1), .face-4 .pip:nth-child(3), .face-4 .pip:nth-child(7), .face-4 .pip:nth-child(9) { opacity: 1; }
+  .face-5 .pip:nth-child(1), .face-5 .pip:nth-child(3), .face-5 .pip:nth-child(5), .face-5 .pip:nth-child(7), .face-5 .pip:nth-child(9) { opacity: 1; }
+  .face-6 .pip:nth-child(1), .face-6 .pip:nth-child(3), .face-6 .pip:nth-child(4), .face-6 .pip:nth-child(6), .face-6 .pip:nth-child(7), .face-6 .pip:nth-child(9) { opacity: 1; }
+
+  /* tension stages (settings.tenseFrom..last): --tense runs 0 -> 1 and drives the glow and the vignette */
+  .card.tense {
+    border-color: color-mix(in srgb, #ff6a3d calc(var(--tense) * 100%), var(--panel-border));
+    animation: tenseGlow 1.8s ease-in-out infinite;
+  }
+  @keyframes tenseGlow {
+    50% { box-shadow: 0 0 0 6px rgba(255,255,255,0.7), 0 0 calc(14px + var(--tense) * 26px) 6px rgba(255,90,60,calc(0.25 + var(--tense) * 0.35)), 0 14px 34px rgba(224,64,122,0.22); }
+  }
+  .card.tense.tense-rolling { animation: tenseGlow 0.85s ease-in-out infinite, cardBeat 0.85s ease-in-out infinite; }
+  @keyframes cardBeat {
+    0%, 30%, 100% { scale: 1; }
+    15% { scale: 1.008; }
+    45% { scale: 1.004; }
+  }
+  .tension-veil {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(70,0,25,calc(0.2 + var(--tense) * 0.35)) 100%);
+    opacity: 0;
+    transition: opacity 0.6s;
+  }
+  .tension-veil.on { opacity: 1; animation: veilBeat 0.85s ease-in-out infinite; }
+  @keyframes veilBeat { 15% { opacity: 0.7; } 45% { opacity: 0.85; } }
+  .card.tense .next-prize { max-width: 260px; }
+
+  .sum-label { margin: 14px 0 6px; opacity: 0.8; font-size: 1.15rem; line-height: 1.4; min-height: 3.22rem; }
+  .sum-label.compact { font-size: 0.95rem; min-height: 1.33rem; margin-top: 6px; }
+
+  .guess-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: auto;
+  }
+
+  button {
+    padding: 20px 0;
+    font-family: inherit;
+    font-size: 1.4rem;
+    line-height: 1.2;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    touch-action: manipulation;
+    transition: transform 0.1s, opacity 0.2s, box-shadow 0.2s;
+  }
+  button:active { transform: scale(0.96); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .guess-btn {
+    width: 145px;
+    padding: 12px 0;
+    font-size: 1.1rem;
+    background: #d58ab0;
+    color: var(--btn-text);
+    border-radius: 999px;
+    box-shadow: 0 4px 0 #a9628a;
+  }
+  .guess-btn.selected { box-shadow: 0 4px 0 rgba(0,0,0,0.25), 0 0 0 4px #fff, 0 0 0 7px currentColor; }
+  #btnOdd.selected { background: #e0407a; color: #fff; }
+  #btnEven.selected { background: #7b3fc4; color: #fff; }
+
+  /* sits over the empty win-picture slot while a guess is being picked, so nothing shifts */
+  .cash-out {
+    position: absolute;
+    left: 50%;
+    bottom: 74px;
+    translate: -50% 0;
+    padding: 6px 14px;  /* kept narrow so it stays clear of the two characters */
+    font-family: var(--title-font);
+    font-weight: normal;
+    font-size: 0.88rem;
+    white-space: nowrap;
+    color: #7a4b00;
+    background: linear-gradient(180deg, #ffe58a, #ffc93c);
+    border-radius: 999px;
+    box-shadow: 0 3px 0 #d79a12, 0 5px 10px rgba(215,154,18,0.35);
+  }
+  .cash-out .en { font-family: inherit; font-size: 0.8em; margin-left: 4px; }
+  /* long prize names are cut with … so the button stays clear of the two characters */
+  .cash-prize { display: inline-block; max-width: 84px; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom; }
+  .cash-out.confirm {
+    color: #fff;
+    background: linear-gradient(180deg, #ff8fb5, #e0407a);
+    box-shadow: 0 3px 0 #a8245a, 0 5px 10px rgba(224,64,122,0.4);
+    animation: confirmThrob 0.6s ease-in-out infinite;
+  }
+  @keyframes confirmThrob { 50% { scale: 1.06; } }
+
+  #restartBtn {
+    flex: 0 0 auto;
+    background: #fff;
+    border: 3px solid var(--accent);
+    color: var(--accent);
+    width: 220px;
+    padding: 11px 0;
+    font-size: 1.1rem;
+    border-radius: 999px;
+  }
+  #overArea:not(.hidden) {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 12% 18%, rgba(255,255,255,0.7) 0 2px, transparent 3px) 0 0 / 46px 46px,
+      linear-gradient(160deg, #ffc4dc 0%, #ffdfec 45%, #f8c0e1 100%);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  /* end screen is laid out at the game's own size (.layout: 705 + 15 + 344 = 1064 x 800)
+     and scaled to the window by fitCardToWindow(), so it matches the game screen.
+     The picture (or the 10승 card) takes whatever height the other rows leave;
+     the prize list and Play Again sit compactly underneath. */
+  .over-stage {
+    flex-shrink: 0;
+    width: 1064px;
+    height: 800px;
+    padding: 12px 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas: "msg" "img" "foot";
+    justify-items: center;
+    row-gap: 12px;
+  }
+  @media (max-aspect-ratio: 1/1) {
+    .over-stage { width: var(--over-w, 705px); height: 1000px; }  /* portrait: same width as the stacked game */
+    /* the tall stage would make a height-filling picture wider than the stage, so size it by width */
+    .over-stage .result-img { width: 100%; height: auto; max-height: 100%; align-self: center; }
+    /* smaller chips keep even 9 prizes to two lines, so the picture keeps its full 9:10 size */
+    .over-stage .earned { gap: 5px 6px; }
+    .over-stage .earned-caption { font-size: 0.85rem; }
+    .over-stage .prize-chip { padding: 2px 9px; font-size: 0.85rem; border-width: 1.5px; }
+    .over-stage .earned.single-view .prize-chip { font-size: 1.6rem; padding: 5px 18px; border-width: 2px; }
+    .over-stage .earned.single-view .earned-caption { font-size: 1.3rem; }
+    .final-area .grand-card { width: 400px; }
+    .final-area .win-gallery img { width: 90px; height: 90px; }
+  }
+  #overMessage { grid-area: msg; }
+  .result-img, .final-area { grid-area: img; }
+  .over-foot {
+    grid-area: foot;
+    display: flex;
+    flex-direction: column;  /* prize line, then Play Again under it */
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+  }
+  .result-img {
+    height: 100%;
+    aspect-ratio: 9 / 10;
+    object-fit: cover;
+  }
+  .message {
+    font-size: 1.5rem;
+    font-weight: bold;
+    line-height: 1.3;
+    min-height: 3.9rem;
+    margin-bottom: 12px;
+  }
+  .message.win { color: #15803d;  /* success green, distinct from the red lose message */ font-size: 1.1rem; min-height: 1.43rem; margin-bottom: 4px; }
+  /* grows by exactly the height the compact sum label and win message give up, so layout below stays put */
+  .message.win + .win-img { width: calc(170px + 4.36rem); height: calc(170px + 4.36rem); margin-bottom: 4px; }
+  .message.lose { color: var(--danger); }
+  .win-img {
+    width: 140px;
+    height: 140px;
+    min-height: 0;  /* the only item allowed to shrink, so the buttons never leave the card */
+    object-fit: contain;
+    border-radius: 12px;
+    margin: 0 auto 12px;
+    display: block;
+  }
+  #overMessage {
+    font-size: 1.25rem;
+    min-height: auto;
+    margin: 0;
+    padding: 8px 26px;
+    max-width: 100%;
+    text-align: center;
+    border-radius: 30px;  /* a pill on one line, a rounded box once it wraps */
+  }
+  #overMessage.lose { background: rgba(220, 38, 38, 0.92); color: #ffffff; }
+  #overMessage.win  { background: rgba(224, 64, 122, 0.92); color: #ffffff; }
+  /* caption and prize chips flow as one line; a long list wraps onto more lines */
+  .earned {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 10px;
+    max-width: 1000px;
+  }
+  .earned:empty { display: none; }
+  .earned-caption { font-size: 1rem; font-weight: bold; color: var(--text); opacity: 0.75; white-space: nowrap; }
+  .prize-chips { display: contents; }  /* chips join the caption's line */
+  .prize-chip {
+    padding: 3px 12px;
+    font-family: var(--title-font);
+    font-size: 1.05rem;
+    color: var(--c);
+    background: #fff;
+    border: 2px solid color-mix(in srgb, var(--c) 40%, white);
+    border-radius: 999px;
+  }
+  .prize-chip.lost {
+    text-decoration-line: line-through;
+    text-decoration-thickness: 2px;
+    opacity: 0.75;
+  }
+  .prize-chip.kept { background: color-mix(in srgb, var(--c) 10%, white); }
+  /* the single prize taken home or lost is shown large */
+  .earned.single-view .prize-chip { font-size: 1.7rem; padding: 6px 20px; }
+  .earned.single-view .earned-caption { font-size: 1.4rem; }
+  .prize-chip .prize-img { width: 1.3em; height: 1.3em; }
+  .earned-none { font-family: var(--title-font); font-size: 2.2rem; color: #9b6b84; }
+
+  /* final all-clear screen: the grand prize card in the middle, every win picture
+     on a rounded-rectangle ring around it (positions from placeAroundCard()) */
+  .final-area {
+    position: relative;
+    align-self: stretch;
+    justify-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .grand-card {
+    position: relative;
+    width: 500px;
+    padding: 18px 20px 16px;
+    text-align: center;
+    border-radius: 32px;
+    background: linear-gradient(120deg, #ffe3f0, #fff4c9, #e3f4ff, #f1e3ff, #ffe3f0);
+    background-size: 300% 100%;
+    animation: rainbowSlide 6s linear infinite;
+    box-shadow: 0 0 0 6px #fff, 0 0 0 10px #f78bb7, 0 20px 50px rgba(224,64,122,0.35);
+  }
+  @keyframes rainbowSlide { to { background-position: 300% 0; } }
+  .win-gallery {
+    position: absolute;
+    inset: 0;
+  }
+  .win-gallery img {
+    position: absolute;
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border: 3px solid #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(224,64,122,0.3);
+    animation: galleryPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+    animation-delay: calc(0.3s + var(--i) * 0.07s);  /* pop in one after another */
+  }
+  @keyframes galleryPop { from { opacity: 0; transform: scale(0.4) rotate(-8deg); } }
+  .grand-crown { font-size: 2.8rem; line-height: 1; animation: crownBob 1.6s ease-in-out infinite; }
+  @keyframes crownBob { 50% { transform: translateY(-8px) rotate(-6deg); } }
+  .grand-wins { font-family: var(--title-font); font-size: 2rem; color: #d21c6a; margin-top: 6px; }
+  .grand-prize {
+    font-family: var(--title-font);
+    font-size: var(--grand-size, 6.5rem);
+    overflow-wrap: anywhere;
+    line-height: 1.1;
+    background: linear-gradient(90deg, var(--c), color-mix(in srgb, var(--c) 60%, white), color-mix(in srgb, var(--c) 75%, black), var(--c));
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rainbowSlide 3s linear infinite;
+    filter: drop-shadow(0 3px 0 #fff) drop-shadow(0 6px 8px rgba(176,36,122,0.3));
+  }
+  .grand-heart { font-size: 3rem; animation: heartBeat 1s ease-in-out infinite; }
+  @keyframes heartBeat { 15% { transform: scale(1.25); } 30% { transform: scale(1); } 45% { transform: scale(1.15); } }
+  .heart-rain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 51;
+  }
+  .heart-rain span {
+    position: absolute;
+    top: -40px;
+    animation: heartFall linear forwards;
+  }
+  @keyframes heartFall { to { transform: translateY(110vh) rotate(360deg); } }
+  .hidden { display: none; }
+  .invisible { visibility: hidden; }
+  .en {
+    display: inline-block;
+    font-size: 1em;
+    font-weight: 500;
+    opacity: 0.65;
+    margin-left: 8px;
+  }
+</style>
 </head>
 <body>
   <div class="layout" id="layout">
@@ -111,6 +1243,1385 @@
    </div>
   </div>
 
-<script src="app.js"></script>
+<script>
+  // Host settings from the ⚙️ editor. The ladder always ends on the grand prize,
+  // so N stages use prizes 1..N-1 plus the grand prize as the Nth.
+  const STAGE_CHOICES = [3, 4, 5, 6, 7, 8, 9, 10];
+  const DEFAULT_SETTINGS = { stages: 10, tenseFrom: 7 };  // tenseFrom 0 = no tension stages
+  const SETTINGS_STORE_KEY = 'diceGameSettings.v1';
+
+  function clampTense(from, stages) {
+    from = Number(from) || 0;
+    return from <= 0 ? 0 : Math.min(from, stages);
+  }
+
+  function loadSettings() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SETTINGS_STORE_KEY));
+      if (saved && STAGE_CHOICES.includes(saved.stages)) {
+        return { stages: saved.stages, tenseFrom: clampTense(saved.tenseFrom, saved.stages) };
+      }
+    } catch (e) { /* storage blocked or bad data: fall back to defaults */ }
+    return { ...DEFAULT_SETTINGS };
+  }
+
+  function saveSettings() {
+    try {
+      localStorage.setItem(SETTINGS_STORE_KEY, JSON.stringify(settings));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  let settings = loadSettings();
+
+  function isTense(s) {
+    return settings.tenseFrom > 0 && s >= settings.tenseFrom;
+  }
+
+  // 0 -> 1 across the tension stages; 0 outside them
+  function tenseLevel(s) {
+    if (!isTense(s)) return 0;
+    return (s - settings.tenseFrom + 1) / (settings.stages - settings.tenseFrom + 1);
+  }
+
+  function ladderPrizes(list, stages) {
+    return [...list.slice(0, stages - 1), { ...list[list.length - 1], wins: stages }];
+  }
+  // Default prize for reaching N wins, from the 주사위 홀짝게임 poster.
+  // The host can change these in the ⚙️ editor; edits are kept in this browser.
+  const DEFAULT_PRIZES = [
+    { wins: 1,  name: '시그댄스',  icon: '🪩', color: '#2e8b2e' },
+    { wins: 2,  name: '쪽지셀카',  icon: '📸', color: '#16936a' },
+    { wins: 3,  name: '간단방셀',  sub: '2장', icon: '🖼️', color: '#3656c9' },
+    { wins: 4,  name: '역팬 200개', icon: '⭐', color: '#a8730f' },
+    { wins: 5,  name: '정성방셀',  sub: '7장', icon: '🎞️', color: '#e36414' },
+    { wins: 6,  name: '역팬 500개', icon: '🌟', color: '#d01f2a' },
+    { wins: 7,  name: '스쿼트 300번', icon: '🏋️', color: '#7b3fc4' },
+    { wins: 8,  name: '그림방셀',  icon: '🎨', color: '#e0407a' },
+    { wins: 9,  name: '카톡',      icon: '💬', color: '#9a6b00' },
+    { wins: 10, name: '전데',      icon: '💖👑', color: '#d61f69', grand: true },
+  ];
+  const PRIZE_STORE_KEY = 'diceGamePrizes.v2';
+  // Chance (%) of guessing right on each stage, set per stage in the editor.
+  const DEFAULT_RATE = 50;
+  const RATE_CHOICES = Array.from({ length: 19 }, (_, i) => 5 + i * 5);  // 5..95
+
+  function cleanRate(r) {
+    return RATE_CHOICES.includes(Number(r)) ? Number(r) : DEFAULT_RATE;
+  }
+  const ICON_MAX_PX = 96;      // uploaded icons are shrunk to this so they fit in localStorage
+
+  function loadPrizes() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(PRIZE_STORE_KEY));
+      if (Array.isArray(saved) && saved.length === DEFAULT_PRIZES.length) {
+        return DEFAULT_PRIZES.map((d, i) => ({
+          ...d, ...saved[i], wins: d.wins, grand: d.grand, rate: cleanRate(saved[i].rate),
+        }));
+      }
+    } catch (e) { /* storage blocked or bad data: fall back to defaults */ }
+    return DEFAULT_PRIZES.map(d => ({ ...d, rate: DEFAULT_RATE }));
+  }
+
+  function savePrizes() {
+    try {
+      localStorage.setItem(PRIZE_STORE_KEY, JSON.stringify(prizes));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  let prizes = loadPrizes();
+  let stage = 1;
+  let locked = false;
+  let selectedGuess = null;
+
+  const ROTATIONS = {
+    1: { x: 0,   y: 0   },
+    2: { x: 0,   y: -90 },
+    3: { x: 90,  y: 0   },
+    4: { x: -90, y: 0   },
+    5: { x: 0,   y: 90  },
+    6: { x: 0,   y: 180 },
+  };
+
+  const DRAG_RATIO = 0.8;      // degrees of spin per pixel of mouse movement
+  const SPIN_FRICTION = 2.0;   // higher = the die stops sooner after the mouse stops
+  const MAX_SPIN_SPEED = 2500; // degrees per second
+  const WIN_LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x'];
+  const LOSE_IMG_COUNT = 31;
+  // Bump after replacing any image file so browsers stop showing the cached old one.
+  const IMG_VERSION = 3;
+  const IMG_REVEAL_MAX_MS = 600;  // longest wait for a new win/lose picture before showing it anyway
+  const ROLL_MS = 1500;        // dice tumble time; the result shows when it ends
+  const CASH_OUT_CONFIRM_MS = 3000;  // how long the "tap again to confirm" state waits
+  const SUM_HINT = '홀수 또는 짝수를 고른 후 주사위를 클릭해서 굴리세요 <span class="en">Pick Odd or Even, then click the dice to roll</span>';
+  // Camera angle for the dice; spin and lighting maths both account for it.
+  const VIEW_TILT = 'rotateX(-14deg) rotateY(-18deg)';
+  const VIEW_SCALE = 0.84;     // tilted die projects wider, so shrink it to keep the two apart
+  const VIEW = new DOMMatrix(VIEW_TILT);
+  const VIEW_INV = VIEW.inverse();
+  const LIGHT = (() => {       // from upper left, mostly in front
+    const v = [-0.3, -0.5, 0.8];
+    const len = Math.hypot(...v);
+    return v.map(c => c / len);
+  })();
+  const MAX_SHADE = 0.42;      // darkness of a face turned fully away from the light
+  const FACE_NORMALS = {
+    1: [0, 0, 1], 6: [0, 0, -1],
+    2: [1, 0, 0], 5: [-1, 0, 0],
+    3: [0, 1, 0], 4: [0, -1, 0],
+  };
+
+  function imgUrl(name) {
+    const dir = typeof name === 'number' ? 'fail' : 'success';
+    return `${dir}/${name}.webp?v=${IMG_VERSION}`;
+  }
+
+  // Changing src keeps painting the previous picture until the new one is decoded,
+  // so keep the element hidden until then. The token drops stale loads from earlier rounds.
+  function swapImage(img, src) {
+    const token = String(Math.random());
+    img.dataset.token = token;
+    img.style.visibility = 'hidden';
+    img.src = src;
+    const shown = () => {
+      if (img.dataset.token === token) img.style.visibility = '';
+    };
+    // broken file: show it anyway so the alt text appears;
+    // the timeout keeps a stalled decode from hiding the picture for good
+    Promise.race([img.decode().catch(() => {}), new Promise(r => setTimeout(r, IMG_REVEAL_MAX_MS))]).then(shown);
+  }
+
+  [
+    ...WIN_LETTERS,
+    ...Array.from({ length: LOSE_IMG_COUNT }, (_, i) => i + 1),
+  ].forEach(name => { new Image().src = imgUrl(name); });
+
+  // Each die: six inner core plates plus six faces of a 3x3 pip grid; CSS shows the right pips.
+  function buildDie(pedestal, id) {
+    const sides = [1, 2, 3, 4, 5, 6];
+    const cores = sides.map(n => `<div class="core core-${n}"></div>`).join('');
+    const pips = '<span class="pip"></span>'.repeat(9);
+    const faces = sides.map(n => `<div class="face face-${n}">${pips}</div>`).join('');
+    pedestal.innerHTML = `<div class="dice-scene"><div class="dice-view">`
+      + `<div class="dice-cube" id="${id}">${cores}${faces}</div>`
+      + `</div></div><div class="dice-shadow"></div>`;
+  }
+
+  const card = document.getElementById('card');
+  const title = document.getElementById('title');
+  const stageLabel = document.getElementById('stageLabel');
+  const pedestal1 = document.getElementById('pedestal1');
+  const pedestal2 = document.getElementById('pedestal2');
+  buildDie(pedestal1, 'cube1');
+  buildDie(pedestal2, 'cube2');
+  const cube1 = document.getElementById('cube1');
+  const cube2 = document.getElementById('cube2');
+
+  // ---------- the die in the left character's hand ----------
+  // Where the painted die sits in girl-dice.png, as fractions of the picture's width / height.
+  const HAND_DIE = { x: 0.227, y: 0.734, size: 0.17 };  // size: the cube's edge; tilted, it looks ~1.35x wider
+  const HAND_THROW_MS = 1000;
+  document.documentElement.style.setProperty('--throw-ms', `${HAND_THROW_MS}ms`);
+  const HAND_TILT = new DOMMatrix('rotateX(-24deg) rotateY(32deg) rotateZ(-12deg)');  // matches .hand-tilt
+  const handDie = document.getElementById('handDie');
+  const girlDice = document.querySelector('.bg-girl.dice');
+  (function buildHandDie() {
+    const pips = '<span class="pip"></span>'.repeat(9);
+    const sides = [1, 2, 3, 4, 5, 6];
+    handDie.innerHTML = '<div class="hand-tilt"><div class="dice-cube">'
+      + sides.map(n => `<div class="core core-${n}"></div>`).join('')
+      + sides.map(n => `<div class="face face-${n}">${pips}</div>`).join('')
+      + '</div></div>';
+  })();
+  const handCube = handDie.querySelector('.dice-cube');
+  const handFaces = Array.from(handDie.querySelectorAll('.face'), f => ({
+    el: f,
+    n: FACE_NORMALS[f.className.match(/face-(\d)/)[1]],
+  }));
+
+  // same lighting as the big dice, from its live (possibly spinning) pose
+  function shadeHandDie() {
+    const t = getComputedStyle(handCube).transform;
+    const m = HAND_TILT.multiply(t && t !== 'none' ? new DOMMatrix(t) : new DOMMatrix());
+    for (const f of handFaces) {
+      const p = m.transformPoint(new DOMPoint(f.n[0], f.n[1], f.n[2], 0));
+      const d = (p.x * LIGHT[0] + p.y * LIGHT[1] + p.z * LIGHT[2]) / Math.hypot(p.x, p.y, p.z);
+      f.el.style.setProperty('--shade', (MAX_SHADE * (1 - Math.max(0, d))).toFixed(3));
+    }
+  }
+  shadeHandDie();
+
+  function shadeHandDieWhileFlying() {
+    shadeHandDie();
+    if (handDie.classList.contains('flying')) requestAnimationFrame(shadeHandDieWhileFlying);
+  }
+
+  // card-space position of the painted die; the character's size changes between layouts
+  function handSpot() {
+    const size = girlDice.offsetWidth * HAND_DIE.size;
+    return {
+      x: girlDice.offsetLeft + girlDice.offsetWidth * HAND_DIE.x - size / 2,
+      y: girlDice.offsetTop + girlDice.offsetHeight * HAND_DIE.y - size / 2,
+      k: size / 260,
+    };
+  }
+
+  function placeHandDie() {
+    if (handDie.classList.contains('flying')) return;
+    const { x, y, k } = handSpot();
+    handDie.style.transform = `translate(${x}px, ${y}px) scale(${k})`;
+  }
+
+  function showHandDie() {
+    handDie.classList.remove('gone', 'flying');
+    placeHandDie();
+  }
+
+  // The small die arcs from her hand to the middle of the two big dice, tumbling at its own size,
+  // and fades out as it arrives — the big dice are already rolling by then.
+  function throwHandDie() {
+    if (!girlDice.offsetWidth) return;
+    const from = handSpot();
+    const cardBox = card.getBoundingClientRect();
+    const zoom = cardBox.width / card.offsetWidth;  // the whole layout may be scaled to the window
+    const row = diceRow.getBoundingClientRect();
+    const k = from.k;  // stays the size it is in her hand all the way
+    const toX = (row.left + row.width / 2 - cardBox.left) / zoom - 130 * k;
+    const toY = (row.top + row.height * 0.4 - cardBox.top) / zoom - 130 * k;
+    const peakY = Math.min(from.y, toY) - 140;
+    const mid = (a, b, t) => a + (b - a) * t;
+    const path = [
+      [from.x, from.y, k],
+      [from.x - 18, from.y + 10, k],                          // wind-up
+      [mid(from.x, toX, 0.35), mid(from.y, peakY, 0.8), k],  // rising
+      [mid(from.x, toX, 0.7), peakY, k],                      // top of the arc
+      [toX, toY, k],                                          // dropping onto the dice
+    ];
+    path.forEach(([x, y, k], i) => {
+      handDie.style.setProperty(`--x${i}`, `${x}px`);
+      handDie.style.setProperty(`--y${i}`, `${y}px`);
+      handDie.style.setProperty(`--k${i}`, k);
+    });
+
+    girlDice.classList.remove('wind-up');
+    void girlDice.offsetWidth;
+    girlDice.classList.add('wind-up');
+
+    const flash = document.createElement('div');
+    const fs = from.k * 260 * 1.6;
+    flash.className = 'hand-flash';
+    Object.assign(flash.style, {
+      width: `${fs}px`, height: `${fs}px`,
+      left: `${from.x + from.k * 130 - fs / 2}px`, top: `${from.y + from.k * 130 - fs / 2}px`,
+    });
+
+    handDie.classList.remove('flying', 'gone');
+    void handDie.offsetWidth;  // restart the animation
+    handDie.classList.add('flying');
+    requestAnimationFrame(shadeHandDieWhileFlying);
+    setTimeout(() => card.insertBefore(flash, handDie), HAND_THROW_MS * 0.22);  // as it leaves her hand
+    setTimeout(() => flash.remove(), HAND_THROW_MS * 0.22 + 500);
+    setTimeout(() => {
+      handDie.classList.add('gone');
+      handDie.classList.remove('flying');
+      placeHandDie();
+      shadeHandDie();  // back to its resting lighting for next time
+    }, HAND_THROW_MS);
+  }
+  const sumLabel = document.getElementById('sumLabel');
+  const message = document.getElementById('message');
+  const btnOdd = document.getElementById('btnOdd');
+  const btnEven = document.getElementById('btnEven');
+  const diceRow = document.getElementById('diceRow');
+  const gameArea = document.getElementById('gameArea');
+  const overArea = document.getElementById('overArea');
+  const overMessage = document.getElementById('overMessage');
+  const overImg = document.getElementById('overImg');
+  const restartBtn = document.getElementById('restartBtn');
+  const winImg = document.getElementById('winImg');
+  const layout = document.getElementById('layout');
+  const prizeList = document.getElementById('prizeList');
+  const earned = document.getElementById('earned');
+  const grandCard = document.getElementById('grandCard');
+  const finalArea = document.getElementById('finalArea');
+  const winGallery = document.getElementById('winGallery');
+  const grandPrize = document.getElementById('grandPrize');
+  const grandIcon = document.getElementById('grandIcon');
+  const grandWins = document.getElementById('grandWins');
+  const editBtn = document.getElementById('editBtn');
+  const cashOutBtn = document.getElementById('cashOutBtn');
+  const rollLogList = document.getElementById('rollLogList');
+  const tensionVeil = document.getElementById('tensionVeil');
+
+  function esc(text) {
+    return String(text ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  }
+
+  function prizeLabel(p) {
+    return esc(p.name) + (p.sub ? ' ' + esc(p.sub) : '');
+  }
+
+  function iconHtml(p) {
+    return p.img ? `<img class="prize-img" src="${esc(p.img)}" alt="">` : esc(p.icon);
+  }
+
+  function prizeHtml(p) {
+    return `<span class="prize-badge">${p.wins}<small>승</small></span>`
+      + `<span class="prize-name">${esc(p.name)}${p.sub ? `<small>${esc(p.sub)}</small>` : ''}</span>`
+      + `<span class="prize-check">Pass!</span>`
+      + `<span class="prize-icon">${iconHtml(p)}</span>`;
+  }
+
+  function prizeEl(p, tag = 'li') {
+    const el = document.createElement(tag);
+    el.className = 'prize' + (p.grand ? ' grand' : '');
+    el.style.setProperty('--c', p.color);
+    el.innerHTML = prizeHtml(p);
+    return el;
+  }
+
+  let ladder = [];    // the prizes in play: one per stage, grand prize last
+  let prizeEls = [];
+  function renderPrizes() {
+    ladder = ladderPrizes(prizes, settings.stages);
+    prizeList.replaceChildren();
+    prizeEls = ladder.map(p => prizeList.appendChild(prizeEl(p)));
+    const grand = ladder[ladder.length - 1];
+    grandWins.textContent = `${grand.wins}승 달성!`;
+    grandPrize.textContent = grand.name;
+    // shrink long names so the final card still fits on screen
+    const len = [...grand.name].length;
+    grandPrize.style.setProperty('--grand-size', len <= 4 ? '5.5rem' : len <= 8 ? '3.2rem' : '2.2rem');
+    grandIcon.innerHTML = iconHtml(grand);
+    grandCard.style.setProperty('--c', grand.color);
+  }
+  renderPrizes();
+
+  // wins = stages already cleared; the row for the next win is the current target.
+  function updateLadder(wins) {
+    prizeEls.forEach((el, i) => {
+      el.classList.remove('lost');
+      el.classList.toggle('done', i < wins);
+      el.classList.toggle('current', i === wins);
+    });
+  }
+
+  function newCubeState(el) {
+    const faces = Array.from(el.querySelectorAll('.face'), f => ({
+      el: f,
+      n: FACE_NORMALS[f.className.match(/face-(\d)/)[1]],
+    }));
+    el.parentElement.style.transform = `scale(${VIEW_SCALE}) ${VIEW_TILT}`;
+    return { el, faces, x: 0, y: 0, tilt: new DOMMatrix(), vx: 0, vy: 0, lastMove: 0, lastX: 0, lastY: 0 };
+  }
+  const cubeState1 = newCubeState(cube1);
+  const cubeState2 = newCubeState(cube2);
+
+  function rollDie() {
+    return Math.floor(Math.random() * 6) + 1;
+  }
+
+  // Two dice redrawn until the sum has the wanted parity, so every matching pair stays equally likely.
+  // At a 50% win rate this is exactly two fair dice.
+  function rollPair(wantOdd) {
+    for (;;) {
+      const a = rollDie();
+      const b = rollDie();
+      if ((a + b) % 2 === (wantOdd ? 1 : 0)) return [a, b];
+    }
+  }
+
+  function updateStageLabel() {
+    const p = ladder[stage - 1];
+    const tense = isTense(stage);
+    const last = stage === settings.stages;
+    const name = last && tense ? '🔥 마지막 스테이지' : tense ? '🔥 스테이지' : '스테이지';
+    stageLabel.innerHTML = `${name} ${stage} / ${settings.stages}`
+      + `<span class="next-prize" style="--prize-color:${esc(p.color)}">🎁 ${prizeLabel(p)}</span>`;
+    card.classList.toggle('tense', tense);
+    document.documentElement.style.setProperty('--tense', tenseLevel(stage).toFixed(2));
+    updateLadder(stage - 1);
+  }
+
+  // Tense stages roll longer, and the second die lands well after the first;
+  // both grow toward the last stage (2.9s and 3.7s there).
+  function rollTiming(s) {
+    if (!isTense(s)) return { first: ROLL_MS, second: ROLL_MS };
+    const level = tenseLevel(s);
+    const first = ROLL_MS + Math.round(level * 1400);
+    return { first, second: first + 300 + Math.round(level * 500) };
+  }
+
+  // Reads the live (possibly mid-transition) transform so shading follows the CSS roll too.
+  function shadeCube(state) {
+    const t = getComputedStyle(state.el).transform;
+    const m = VIEW.multiply(t && t !== 'none' ? new DOMMatrix(t) : new DOMMatrix());
+    for (const f of state.faces) {
+      const p = m.transformPoint(new DOMPoint(f.n[0], f.n[1], f.n[2], 0));
+      const d = (p.x * LIGHT[0] + p.y * LIGHT[1] + p.z * LIGHT[2]) / Math.hypot(p.x, p.y, p.z);
+      f.el.style.setProperty('--shade', (MAX_SHADE * (1 - Math.max(0, d))).toFixed(3));
+    }
+  }
+
+  let shadeUntil = 0;
+  let shadeRunning = false;
+  function shadeFor(ms) {
+    shadeUntil = Math.max(shadeUntil, performance.now() + ms);
+    if (shadeRunning) return;
+    shadeRunning = true;
+    requestAnimationFrame(function tick(now) {
+      shadeCube(cubeState1);
+      shadeCube(cubeState2);
+      if (now < shadeUntil) {
+        requestAnimationFrame(tick);
+      } else {
+        shadeRunning = false;
+      }
+    });
+  }
+
+  function normalize(deg) {
+    return ((deg % 360) + 360) % 360;
+  }
+
+  function spinCubeTo(cubeEl, state, targetNumber, ms) {
+    const target = ROTATIONS[targetNumber];
+    const turns = () => Math.round(ms / 750) + Math.floor(Math.random() * 2);  // longer rolls spin more
+    state.x += 360 * turns();
+    state.y += 360 * turns();
+    state.x += normalize(target.x) - normalize(state.x);
+    state.y += normalize(target.y) - normalize(state.y);
+    state.tilt = new DOMMatrix();
+    state.vx = 0;
+    state.vy = 0;
+    spinning.delete(state);
+    cubeEl.classList.remove('tilting');
+    cubeEl.style.setProperty('--roll-duration', `${ms}ms`);
+    applyCubeTransform(cubeEl, state);
+    shadeFor(ms + 200);  // covers the roll transition
+  }
+
+  // Always matrix3d + rotateX + rotateY: the browser then eases the tilt back to upright
+  // while still animating the multi-turn roll on the rotate functions.
+  function applyCubeTransform(cubeEl, state) {
+    const m = Array.from(state.tilt.toFloat64Array()).join(',');
+    cubeEl.style.transform = `matrix3d(${m}) rotateX(${state.x}deg) rotateY(${state.y}deg)`;
+  }
+
+  function clampSpeed(v) {
+    return Math.max(-MAX_SPIN_SPEED, Math.min(MAX_SPIN_SPEED, v));
+  }
+
+  const spinning = new Set();
+  let lastFrame = null;
+
+  function spinStep(now) {
+    const dt = Math.min((now - lastFrame) / 1000, 0.05);
+    lastFrame = now;
+    const decay = Math.exp(-SPIN_FRICTION * dt);
+    for (const s of spinning) {
+      const speed = Math.hypot(s.vx, s.vy);
+      if (speed < 5) {
+        s.vx = 0;
+        s.vy = 0;
+        spinning.delete(s);
+        continue;
+      }
+      // Pre-multiply so the spin axis stays fixed to the screen, not to the die's current pose;
+      // conjugating by VIEW keeps it screen-fixed despite the camera tilt.
+      const spin = new DOMMatrix().rotateAxisAngle(s.vx, s.vy, 0, speed * dt);
+      s.tilt = VIEW_INV.multiply(spin).multiply(VIEW).multiply(s.tilt);
+      s.vx *= decay;
+      s.vy *= decay;
+      applyCubeTransform(s.el, s);
+      shadeCube(s);
+    }
+    if (spinning.size) {
+      requestAnimationFrame(spinStep);
+    } else {
+      lastFrame = null;
+    }
+  }
+
+  function flickDie(state, e) {
+    if (locked || !selectedGuess) return;
+    const dt = (e.timeStamp - state.lastMove) / 1000;
+    // Track the delta ourselves: movementX/Y units differ between browsers outside pointer lock.
+    const dx = e.clientX - state.lastX;
+    const dy = e.clientY - state.lastY;
+    state.lastMove = e.timeStamp;
+    state.lastX = e.clientX;
+    state.lastY = e.clientY;
+    if (dt <= 0 || dt > 0.1) return;
+    const targetVy = (dx / dt) * DRAG_RATIO;
+    const targetVx = (-dy / dt) * DRAG_RATIO;
+    state.vx = clampSpeed(state.vx + (targetVx - state.vx) * 0.5);
+    state.vy = clampSpeed(state.vy + (targetVy - state.vy) * 0.5);
+    state.el.classList.add('tilting');
+    spinning.add(state);
+    if (lastFrame === null) {
+      lastFrame = performance.now();
+      requestAnimationFrame(spinStep);
+    }
+  }
+
+
+  function selectGuess(guess) {
+    if (locked) return;
+    selectedGuess = guess;
+    btnOdd.classList.toggle('selected', guess === 'odd');
+    btnEven.classList.toggle('selected', guess === 'even');
+    diceRow.classList.add('ready');
+  }
+
+  function rollDice() {
+    if (locked || !selectedGuess) return;
+    locked = true;
+    btnOdd.disabled = true;
+    btnEven.disabled = true;
+    editBtn.disabled = true;
+    updateCashOut();
+    diceRow.classList.remove('ready');
+    diceRow.classList.add('rolling');
+    pedestal1.classList.remove('bounce', 'landed');
+    pedestal2.classList.remove('bounce', 'landed');
+    message.textContent = '';
+    message.className = 'message';
+    winImg.classList.add('invisible');
+    sumLabel.innerHTML = '굴리는 중... <span class="en">Rolling...</span>';
+
+    // The stage's win chance decides the round; the dice then show a fair pair with that outcome.
+    const win = Math.random() * 100 < ladder[stage - 1].rate;
+    const [a, b] = rollPair((selectedGuess === 'odd') === win);
+    const t = rollTiming(stage);
+    spinCubeTo(cube1, cubeState1, a, t.first);
+    spinCubeTo(cube2, cubeState2, b, t.second);
+    throwHandDie();
+    setTension(isTense(stage));
+
+    setTimeout(() => {
+      pedestal1.classList.add('bounce', 'landed');
+      if (t.second > t.first) {
+        sumLabel.innerHTML = `첫 번째 주사위: ${a} · 두근두근... 💓 <span class="en">First die: ${a}</span>`;
+      }
+    }, t.first);
+    setTimeout(() => {
+      pedestal2.classList.add('bounce', 'landed');
+      setTension(false);
+      showRoundResult(a, b);
+    }, t.second);
+  }
+
+  function setTension(on) {
+    card.classList.toggle('tense-rolling', on);
+    tensionVeil.classList.toggle('on', on);
+  }
+
+  function showRoundResult(a, b) {
+    const sum = a + b;
+    const isOdd = sum % 2 === 1;
+    const win = (isOdd ? 'odd' : 'even') === selectedGuess;
+    logRoll({ stage, a, b, guess: selectedGuess, win, rate: ladder[stage - 1].rate });
+
+    sumLabel.innerHTML = `이번 라운드 합계: ${sum} (${isOdd ? '홀수' : '짝수'}) <span class="en">Sum this round: ${sum} (${isOdd ? 'Odd' : 'Even'})</span>`;
+
+    if (win) {
+      const won = ladder[stage - 1];
+      message.innerHTML = `정답! ${won.wins}승 달성 · 🎁 ${prizeLabel(won)} GET! <span class="en">Correct!</span>`;
+      updateLadder(stage);
+      const wonEl = prizeEls[stage - 1];
+      wonEl.classList.remove('just-won');
+      void wonEl.offsetWidth;  // restart the animation
+      wonEl.classList.add('just-won');
+      message.classList.add('win');
+      sumLabel.classList.add('compact');
+      swapImage(winImg, randomWinImg());
+      winImg.classList.remove('invisible');
+      setTimeout(() => {
+        if (stage >= settings.stages) {
+          showFinalWin();
+        } else {
+          stage += 1;
+          updateStageLabel();
+          resetRoundControls();
+        }
+      }, 3000);
+    } else {
+      message.innerHTML = '틀렸습니다. 게임 종료! <span class="en">Wrong guess. Game over!</span>';
+      message.classList.add('lose');
+      prizeEls.forEach(el => {
+        if (el.classList.contains('done')) el.classList.replace('done', 'lost');
+      });
+      setTimeout(() => showLose(stage), 1400);
+    }
+  }
+
+  function randomWinImg() {
+    return imgUrl(WIN_LETTERS[Math.floor(Math.random() * WIN_LETTERS.length)]);
+  }
+
+  // ---------- roll log ----------
+  const rollLog = [];
+  function logRoll(entry) {
+    rollLog.push(entry);
+    renderRollLog();
+  }
+
+  function renderRollLog() {
+    if (!rollLog.length) {
+      rollLogList.innerHTML = '<li class="empty">아직 기록 없음 · No rolls yet</li>';
+      return;
+    }
+    rollLogList.replaceChildren(...rollLog.map(r => {
+      const li = document.createElement('li');
+      const sum = r.a + r.b;
+      li.className = r.win ? 'win' : 'lose';
+      li.textContent = `${r.stage}. ${r.a}+${r.b}=${sum} ${r.guess === 'odd' ? '홀' : '짝'} `;
+      const mark = document.createElement('span');
+      mark.className = 'log-mark';
+      mark.textContent = r.win ? '✓' : '✗';
+      li.append(mark);
+      li.title = `선택 ${r.guess === 'odd' ? '홀수' : '짝수'} · 결과 ${sum % 2 ? '홀수' : '짝수'} · 승률 ${r.rate}%`;
+      return li;
+    }));
+    rollLogList.scrollTop = rollLogList.scrollHeight;
+  }
+
+  // ---------- cash out: stop between rounds and keep what was won ----------
+  // Two taps (the second within CASH_OUT_CONFIRM_MS) so a stray click can't end the run.
+  let cashOutTimer = null;
+
+  function updateCashOut() {
+    disarmCashOut();
+    cashOutBtn.classList.toggle('hidden', locked || stage === 1);
+  }
+
+  function disarmCashOut() {
+    clearTimeout(cashOutTimer);
+    cashOutTimer = null;
+    cashOutBtn.classList.remove('confirm');
+    // cashing out keeps only the prize of the stage just cleared
+    cashOutBtn.innerHTML = `🎁 그만하고 받기 · <span class="cash-prize">${prizeLabel(ladder[stage - 2] || ladder[0])}</span> <span class="en">Cash out</span>`;
+  }
+
+  cashOutBtn.addEventListener('click', () => {
+    if (locked) return;
+    if (!cashOutTimer) {
+      cashOutBtn.classList.add('confirm');
+      cashOutBtn.innerHTML = '✋ 한 번 더 누르면 확정! <span class="en">Tap again</span>';
+      cashOutTimer = setTimeout(disarmCashOut, CASH_OUT_CONFIRM_MS);
+      return;
+    }
+    disarmCashOut();
+    cashOut();
+  });
+
+  // Rule: stopping keeps only the last cleared stage's prize, not every prize so far.
+  function cashOut() {
+    const wins = stage - 1;
+    const prize = ladder[wins - 1];
+    locked = true;
+    editBtn.disabled = true;
+    showOverScreen(
+      `${wins}승에서 멈췄어요! 🎁 ${prizeLabel(prize)} GET! <span class="en">You stopped at ${wins} wins and take this prize!</span>`,
+      'win',
+      randomWinImg(),
+    );
+    showPrizeChips([prize], true);
+    heartRain();
+  }
+
+  function resetRoundControls() {
+    showHandDie();  // a fresh die back in her hand for the next round
+    selectedGuess = null;
+    btnOdd.classList.remove('selected');
+    btnEven.classList.remove('selected');
+    btnOdd.disabled = false;
+    btnEven.disabled = false;
+    diceRow.classList.remove('ready', 'rolling');
+    pedestal1.classList.remove('landed');
+    pedestal2.classList.remove('landed');
+    sumLabel.classList.remove('compact');
+    sumLabel.innerHTML = SUM_HINT;
+    message.textContent = '';
+    message.className = 'message';
+    winImg.classList.add('invisible');
+    editBtn.disabled = false;
+    locked = false;
+    updateCashOut();
+  }
+
+  // Swaps the game card for the full-screen result; imgSrc may be empty for no picture.
+  function showOverScreen(html, tone, imgSrc) {
+    title.classList.add('hidden');
+    stageLabel.classList.add('hidden');
+    gameArea.classList.add('hidden');
+    overArea.classList.remove('hidden');
+    fitToWindow(overStage);
+    overMessage.innerHTML = html;
+    overMessage.className = `message ${tone}`;
+    overImg.classList.toggle('hidden', !imgSrc);
+    if (imgSrc) swapImage(overImg, imgSrc);
+    finalArea.classList.add('hidden');
+    earned.replaceChildren();
+  }
+
+  function showLose(lostAtStage) {
+    showOverScreen(
+      `스테이지 ${lostAtStage}에서 패배했습니다! <span class="en">You lost at Stage ${lostAtStage}!</span>`,
+      'lose',
+      imgUrl(Math.floor(Math.random() * LOSE_IMG_COUNT) + 1),
+    );
+    // rule: losing forfeits the last cleared stage's prize
+    showPrizeChips(lostAtStage > 1 ? [ladder[lostAtStage - 2]] : [], false);
+  }
+
+  // list: the prizes to show; kept = taken home with 그만하고 받기, otherwise crossed out as lost
+  function showPrizeChips(list, kept) {
+    earned.classList.toggle('single-view', list.length === 1);
+    const wins = list.length;
+    if (wins === 0) {
+      earned.innerHTML = '<div class="earned-none">선물 없음 😢 다시 도전!</div>';
+      return;
+    }
+    const cap = document.createElement('div');
+    cap.className = 'earned-caption';
+    cap.innerHTML = kept
+      ? `🎁 받은 선물 <span class="en">Your prize</span>`
+      : `💔 선물 소멸! <span class="en">Prize lost</span>`;
+    const chips = document.createElement('div');
+    chips.className = 'prize-chips';
+    for (const p of list) {
+      const chip = document.createElement('span');
+      chip.className = 'prize-chip ' + (kept ? 'kept' : 'lost');
+      chip.style.setProperty('--c', p.color);
+      chip.innerHTML = `${p.wins}승 ${prizeLabel(p)}` + (kept ? ` ${iconHtml(p)}` : '');
+      chips.appendChild(chip);
+    }
+    earned.append(cap, chips);
+  }
+
+  function heartRain() {
+    const rain = document.createElement('div');
+    rain.className = 'heart-rain';
+    const icons = ['💖', '💗', '💕', '✨', '👑', '🎲'];
+    for (let i = 0; i < 40; i++) {
+      const h = document.createElement('span');
+      h.textContent = icons[i % icons.length];
+      h.style.left = `${Math.random() * 100}vw`;
+      h.style.fontSize = `${18 + Math.random() * 26}px`;
+      h.style.animationDuration = `${2.8 + Math.random() * 2.5}s`;
+      h.style.animationDelay = `${Math.random() * 2}s`;
+      rain.appendChild(h);
+    }
+    document.body.appendChild(rain);
+    setTimeout(() => rain.remove(), 7000);
+  }
+
+  function showFinalWin() {
+    showOverScreen(
+      `축하합니다! ${settings.stages}개 스테이지를 모두 클리어했습니다! <span class="en">Congratulations! You cleared all ${settings.stages} stages!</span>`,
+      'win',
+      '',
+    );
+    finalArea.classList.remove('hidden');
+    // every win picture; rebuilt each time so the pop-in plays again
+    const imgs = WIN_LETTERS.map((letter, i) => {
+      const img = new Image();
+      img.src = imgUrl(letter);
+      img.alt = '';
+      img.style.setProperty('--i', i);
+      return img;
+    });
+    winGallery.replaceChildren(...imgs);
+    layoutWinGallery();
+    heartRain();
+  }
+
+  // also run on resize: turning the screen swaps the end screen between its wide and tall shapes
+  function layoutWinGallery() {
+    if (finalArea.classList.contains('hidden') || overArea.classList.contains('hidden')) return;
+    placeAroundCard([...winGallery.children], winGallery.offsetWidth, winGallery.offsetHeight,
+      grandCard.offsetWidth, grandCard.offsetHeight);
+  }
+
+  // Space between the grand card and the nearest picture: landscape / portrait screens.
+  const RING_GAP = { wide: 45, tall: 30 };
+  const PICTURE_GAP = 6;   // least space between two neighbouring pictures
+  const PICTURE_MAX = 160; // largest picture size tried
+  const GAP_SLACK = 5;     // the card gap may end up this much over RING_GAP, no more
+  // Picks the biggest picture size whose ring sits RING_GAP from the card without pictures
+  // touching or leaving the w x h box, then spreads the pictures evenly along that ring
+  // (by distance along the curve), clockwise from the top centre.
+  function placeAroundCard(imgs, w, h, cardW, cardH) {
+    const gap = matchMedia('(max-aspect-ratio: 1/1)').matches ? RING_GAP.tall : RING_GAP.wide;
+    for (let size = PICTURE_MAX; size >= 40; size -= 2) {
+      const centres = ringAroundCard(imgs.length, size, gap, cardW, cardH, w, h);
+      if (!centres) continue;
+      const nearest = Math.min(...centres.map(([x, y]) => cardGap(x, y, size, cardW, cardH)));
+      if (nearest > gap + GAP_SLACK) continue;  // ring had to swell; a smaller size keeps the gap
+      putOnRing(imgs, centres, size, w, h);
+      return;
+    }
+    // nothing fit (e.g. a very tall card): small pictures on the largest ring the box allows
+    const size = 40;
+    putOnRing(imgs, ringPoints((w - size) / 2, (h - size) / 2, imgs.length), size, w, h);
+  }
+
+  function putOnRing(imgs, centres, size, w, h) {
+    imgs.forEach((img, i) => {
+      img.style.width = img.style.height = `${size}px`;
+      img.style.left = `${w / 2 + centres[i][0] - size / 2}px`;
+      img.style.top = `${h / 2 + centres[i][1] - size / 2}px`;
+    });
+  }
+
+  // The tightest ring whose pictures stay at least `gap` from the card and clear of each other.
+  // It starts hugging the card and stretches toward whichever side of the box has more room,
+  // so the card keeps exactly `gap` on the tighter side. null if it can't fit the w x h box.
+  function ringAroundCard(n, size, gap, cardW, cardH, w, h) {
+    let a = cardW / 2 + size / 2 + gap;
+    let b = cardH / 2 + size / 2 + gap;
+    const aMax = (w - size) / 2;
+    const bMax = (h - size) / 2;
+    while (a <= aMax && b <= bMax) {
+      const centres = ringPoints(a, b, n);
+      if (centres.every(([x, y]) => cardGap(x, y, size, cardW, cardH) >= gap) && picturesApart(centres, size)) {
+        return centres;
+      }
+      if (aMax - a >= bMax - b) a += 2;
+      else b += 2;
+    }
+    return null;
+  }
+
+  function cardGap(x, y, size, cardW, cardH) {
+    return Math.max(Math.abs(x) - size / 2 - cardW / 2, Math.abs(y) - size / 2 - cardH / 2);
+  }
+
+  function picturesApart(centres, size) {
+    return centres.every(([x1, y1], i) => {
+      const [x2, y2] = centres[(i + 1) % centres.length];
+      return Math.max(Math.abs(x1 - x2), Math.abs(y1 - y2)) >= size + PICTURE_GAP;
+    });
+  }
+
+  // n points evenly spaced along a superellipse |x/a|^4 + |y/b|^4 = 1 (a rounded rectangle,
+  // which hugs the card's corners better than an ellipse), clockwise from the top
+  const RING_ROUNDNESS = 4;
+  function ringPoints(a, b, n) {
+    const STEPS = 1440;
+    const pts = [];
+    const dist = [0];
+    const bend = v => Math.sign(v) * Math.abs(v) ** (2 / RING_ROUNDNESS);
+    for (let k = 0; k <= STEPS; k++) {
+      const t = -Math.PI / 2 + (k / STEPS) * 2 * Math.PI;
+      pts.push([a * bend(Math.cos(t)), b * bend(Math.sin(t))]);
+      // distance measured as the larger of the x and y steps: square pictures only touch when
+      // both gaps close, so this spaces them as tightly on the diagonals as on the straights
+      if (k) dist.push(dist[k - 1] + Math.max(Math.abs(pts[k][0] - pts[k - 1][0]), Math.abs(pts[k][1] - pts[k - 1][1])));
+    }
+    const out = [];
+    let k = 0;
+    for (let i = 0; i < n; i++) {
+      const target = (dist[STEPS] * i) / n;
+      while (dist[k] < target) k++;
+      out.push(pts[k]);
+    }
+    return out;
+  }
+
+  function restart() {
+    stage = 1;
+    rollLog.length = 0;
+    renderRollLog();
+    updateStageLabel();
+    resetRoundControls();
+    title.classList.remove('hidden');
+    stageLabel.classList.remove('hidden');
+    gameArea.classList.remove('hidden');
+    overArea.classList.add('hidden');
+  }
+
+  // ---------- prize editor ----------
+  const editor = document.getElementById('editor');
+  const editorForm = document.getElementById('editorForm');
+  const editorRows = document.getElementById('editorRows');
+  const editorNote = document.getElementById('editorNote');
+  const emojiPalette = document.getElementById('emojiPalette');
+  const PALETTE = [
+    // gifts & love
+    '🎁', '💖', '💌', '💝', '💕', '💘', '😘', '🥰', '💋', '💍', '💎', '👑', '🎀', '🧸', '🌹', '💐', '🌸', '💗', '💓', '😍', '🤗',
+    // photos & video
+    '📸', '🤳', '🖼️', '🎞️', '🎥', '📹', '📺', '📷', '🎬',
+    // stars & party
+    '⭐', '🌟', '✨', '🎉', '🎊', '🏆', '🥇', '🔥', '💯', '🎈', '🥂',
+    // dance, music & performance
+    '🪩', '💃', '🕺', '🎤', '🎵', '🎶', '🎧', '🎹', '🎸', '🥁', '🎻',
+    // challenges & fitness
+    '🏋️', '💪', '🏃', '🤸', '🎯', '🎲', '⚽', '🏀', '🧘',
+    // messages & calls
+    '💬', '📞', '📱', '✍️', '📝', '📩', '💭',
+    // food & drink
+    '🍰', '🎂', '🍫', '🍬', '🍭', '🍦', '🍓', '🍗', '🍕', '🍜', '☕', '🧋', '🍺', '🍩', '🍪', '🍉', '🍣', '🍔', '🍷',
+    // fun & games
+    '🎨', '🎮', '🍀', '🐶', '🐱', '🐰', '🦄', '🎃', '💸', '💰', '🎟️', '🐻', '🌈',
+    // more: hearts
+    '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎', '🖤', '🤍', '💔', '❣️', '💞',
+    '💟', '❤️‍🔥',
+    // more: food & drink
+    '🍎', '🍊', '🍋', '🍌', '🍇', '🍒', '🍑', '🥭', '🍍', '🥝', '🥑', '🌽',
+    '🍟', '🌭', '🌮', '🍝', '🍱', '🍙', '🍤', '🍡', '🥟', '🧁', '🥧', '🍮',
+    '🍯', '🥛', '🍵', '🥤', '🍹', '🍸', '🍾', '🧃',
+    // more: activities & sports
+    '🎾', '🏐', '⚾', '🏈', '🎱', '🏓', '🏸', '🥊', '🛹', '⛸️', '🎿', '🏊',
+    '🚴', '🧗', '🎳', '♟️', '🧩', '🎰',
+    '🥅', '⛳', '🏒', '🏑', '🏏', '🥍', '🪀', '🪁', '🛼', '⛷️', '🏂', '🏄',
+    '🚣', '🤽', '🏇', '🤺', '🥋', '🤼', '🤹', '🧘‍♀️', '🎽', '🛷', '🥌', '🏹',
+    '🎣',
+    // more: objects
+    '💄', '👗', '👠', '👜', '🕶️', '🎩', '💡', '🔔', '📚', '💻', '🛍️', '🧧',
+    '🪄', '🔮', '🕯️', '🧿', '⏰', '💊', '🎐',
+    '🎒', '💼', '👛', '👒', '🧢', '👟', '👡', '🩰', '🧣', '🧤', '🧥', '👘',
+    '👙', '🪞', '🧴', '🪅', '🎏', '🎑', '🖊️', '📒', '📼', '🔑', '🗝️', '🧳',
+    '⌚',
+  ].filter((e, i, all) => all.indexOf(e) === i);  // no duplicates
+  let draft = [];
+  let draftSettings = { ...DEFAULT_SETTINGS };
+  let activeRow = 0;
+  let rowEls = [];   // editor row element per draft index (rows past the stage count are left out)
+  const setStages = document.getElementById('setStages');
+  const setTense = document.getElementById('setTense');
+  const setOdds = document.getElementById('setOdds');
+
+  for (const n of STAGE_CHOICES) setStages.add(new Option(`${n} 스테이지`, n));
+
+  // draft indices shown for the chosen stage count: the first N-1 prizes, then the grand prize
+  function editorIndices() {
+    const n = draftSettings.stages;
+    return [...Array.from({ length: n - 1 }, (_, i) => i), draft.length - 1];
+  }
+
+  function syncSettingsForm() {
+    const { stages, tenseFrom } = draftSettings;
+    setStages.value = stages;
+    setTense.replaceChildren(new Option('끄기 · Off', 0));
+    for (let k = 1; k <= stages; k++) setTense.add(new Option(`${k} 스테이지부터`, k));
+    setTense.value = tenseFrom;
+    updateOdds();
+    editorNote.textContent = stages !== settings.stages && stage > 1
+      ? '스테이지 수를 바꾸면 게임이 처음부터 다시 시작돼요.' : '';
+  }
+
+  // chance of clearing every stage = product of the stage win rates
+  function updateOdds() {
+    const p = editorIndices().reduce((acc, i) => acc * draft[i].rate / 100, 1);
+    const pct = p * 100;
+    setOdds.textContent = `전부 클리어 확률 1/${Math.round(1 / p).toLocaleString()} `
+      + `(${pct.toFixed(pct < 1 ? 2 : 1)}%)`;
+  }
+
+  setStages.addEventListener('change', () => {
+    draftSettings.stages = Number(setStages.value);
+    draftSettings.tenseFrom = clampTense(draftSettings.tenseFrom, draftSettings.stages);
+    syncSettingsForm();
+    buildEditorRows();
+  });
+  setTense.addEventListener('change', () => {
+    draftSettings.tenseFrom = Number(setTense.value);
+  });
+
+  // Each prize can show several emoji. Counted as whole emoji (graphemes), not code units,
+  // so 🏋️ or 👨‍👩‍👧 count as one.
+  const MAX_ICON_EMOJI = 4;
+  const graphemeSplitter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+  function emojiList(text) {
+    return [...graphemeSplitter.segment(String(text ?? '').replace(/\s+/g, ''))].map(g => g.segment);
+  }
+
+  for (const e of PALETTE) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = e;
+    b.addEventListener('click', () => {  // adds to the row's icon, up to MAX_ICON_EMOJI
+      const p = draft[activeRow];
+      const current = p.img ? [] : emojiList(p.icon);
+      if (current.length >= MAX_ICON_EMOJI) {
+        editorNote.textContent = `아이콘은 최대 ${MAX_ICON_EMOJI}개까지 넣을 수 있어요.`;
+        return;
+      }
+      p.icon = [...current, e].join('');
+      p.img = '';
+      editorNote.textContent = '';
+      buildEditorRows();
+    });
+    emojiPalette.appendChild(b);
+  }
+
+  // Shrinks an uploaded picture to a small PNG data URL.
+  function readIcon(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, ICON_MAX_PX / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * scale);
+        c.height = Math.round(img.height * scale);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/png'));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+      img.src = url;
+    });
+  }
+
+  // shade < 0 mixes toward black, > 0 toward white, as a percentage.
+  const SHADE_RANGE = 60;
+  function shadeColor(hex, shade) {
+    const n = parseInt(hex.slice(1), 16);
+    const target = shade < 0 ? 0 : 255;
+    const t = Math.abs(shade) / 100;
+    return '#' + [16, 8, 0]
+      .map(bit => Math.round(((n >> bit) & 255) * (1 - t) + target * t).toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  function editable(p) {
+    return { sub: '', img: '', baseColor: p.color, shade: 0, rate: DEFAULT_RATE, ...p };
+  }
+
+  function buildEditorRows() {
+    closeColorPop();
+    editorRows.replaceChildren();
+    rowEls = [];
+    const shown = editorIndices();
+    if (!shown.includes(activeRow)) activeRow = shown[0];
+    for (const i of shown) {
+      const p = draft[i];
+      const row = document.createElement('div');
+      rowEls[i] = row;
+      row.className = 'ed-row' + (i === activeRow ? ' active' : '');
+      row.style.setProperty('--c', p.color);
+      row.innerHTML = `
+        <span class="ed-badge">${winsLabel(i)}승</span>
+        <input type="text" class="ed-name" maxlength="20" placeholder="선물 이름 Prize" value="${esc(p.name)}">
+        <input type="text" class="ed-sub" maxlength="8" placeholder="수량" title="수량 (선택) · e.g. 2장" value="${esc(p.sub)}">
+        <input type="text" class="ed-icon" placeholder="🎁" value="${p.img ? '' : esc(p.icon)}" title="이모지 아이콘 (최대 ${MAX_ICON_EMOJI}개)">
+        <span class="ed-preview">${iconHtml(p)}</span>
+        <span class="ed-tools">
+          <button type="button" class="ed-btn ghost ed-upload">🖼️ 이미지</button>
+          ${p.img || p.icon ? '<button type="button" class="ed-btn ghost ed-clear" title="아이콘 지우기 · Clear icon">✕</button>' : ''}
+          <input type="file" accept="image/*" hidden>
+        </span>
+        <button type="button" class="ed-color-btn" title="색상 Color" aria-label="색상 선택"><span class="ed-swatch"></span></button>
+        <select class="ed-rate" title="이 스테이지 승률 · Win chance" aria-label="승률">
+          ${RATE_CHOICES.map(r => `<option value="${r}"${r === p.rate ? ' selected' : ''}>승률 ${r}%</option>`).join('')}
+        </select>`;
+      const q = sel => row.querySelector(sel);
+      row.addEventListener('focusin', () => {
+        if (activeRow === i) return;
+        rowEls[activeRow]?.classList.remove('active');
+        activeRow = i;
+        row.classList.add('active');
+      });
+      q('.ed-name').addEventListener('input', e => { p.name = e.target.value; });
+      q('.ed-sub').addEventListener('input', e => { p.sub = e.target.value; });
+      q('.ed-rate').addEventListener('change', e => { p.rate = Number(e.target.value); updateOdds(); });
+      q('.ed-icon').addEventListener('input', e => {
+        const list = emojiList(e.target.value);
+        if (list.length > MAX_ICON_EMOJI) e.target.value = list.slice(0, MAX_ICON_EMOJI).join('');
+        p.icon = e.target.value;
+        p.img = '';
+        q('.ed-preview').innerHTML = iconHtml(p);
+      });
+      q('.ed-color-btn').addEventListener('click', e => toggleColorPop(i, e.currentTarget));
+      const file = q('input[type=file]');
+      q('.ed-upload').addEventListener('click', () => { activeRow = i; file.click(); });
+      file.addEventListener('change', async () => {
+        if (!file.files[0]) return;
+        try {
+          p.img = await readIcon(file.files[0]);
+          buildEditorRows();
+        } catch (e) {
+          editorNote.textContent = '이미지를 읽을 수 없어요.';
+        }
+      });
+      q('.ed-clear')?.addEventListener('click', () => {  // empty icon: start picking emoji afresh
+        p.img = '';
+        p.icon = '';
+        activeRow = i;
+        buildEditorRows();
+      });
+      editorRows.appendChild(row);
+    }
+  }
+
+  // the grand prize is always won on the last stage
+  function winsLabel(i) {
+    return i === draft.length - 1 ? draftSettings.stages : draft[i].wins;
+  }
+
+  // ---------- color picker pop-up ----------
+  const colorPop = document.getElementById('colorPop');
+  const cpPresets = document.getElementById('cpPresets');
+  const cpGrid = document.getElementById('cpGrid');
+  const cpShade = document.getElementById('cpShade');
+  const cpHex = document.getElementById('cpHex');
+  const cpNative = document.getElementById('cpNative');
+  const PRESET_COLORS = ['#ff2a00', '#ff9500', '#ffee00', '#00e600', '#00ffff', '#0033ff',
+    '#ff40ff', '#8e1f9a', '#a87a4a', '#ffffff', '#999999', '#000000'];
+  const GRID_HUES = [192, 216, 252, 276, 330, 4, 20, 34, 44, 54, 66, 96];
+  const GRID_LIGHTNESS = [14, 20, 27, 35, 44, 53, 63, 74, 87];  // dark to light, one grid row each
+  let popRow = -1;
+  let popBtn = null;
+
+  function hslHex(h, sat, l) {
+    sat /= 100; l /= 100;
+    const k = n => (n + h / 30) % 12;
+    const a = sat * Math.min(l, 1 - l);
+    const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+    return '#' + [f(0), f(8), f(4)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join('');
+  }
+
+  function addCell(parent, hex) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'cp-cell';
+    b.dataset.hex = hex;
+    b.title = hex;
+    b.style.setProperty('--cell', hex);
+    b.addEventListener('click', () => {
+      const p = draft[popRow];
+      p.baseColor = hex;
+      p.shade = 0;
+      cpShade.value = 0;
+      applyPopColor();
+    });
+    parent.appendChild(b);
+  }
+  PRESET_COLORS.forEach(hex => addCell(cpPresets, hex));
+  for (let i = 0; i < 12; i++) addCell(cpGrid, hslHex(0, 0, 100 - i * (100 / 11)));  // grays
+  for (const l of GRID_LIGHTNESS) {
+    for (const h of GRID_HUES) addCell(cpGrid, hslHex(h, l > 80 ? 80 : 92, l));
+  }
+  cpShade.min = -SHADE_RANGE;
+  cpShade.max = SHADE_RANGE;
+
+  function applyPopColor() {
+    const p = draft[popRow];
+    p.color = shadeColor(p.baseColor, p.shade);
+    rowEls[popRow].style.setProperty('--c', p.color);
+    colorPop.style.setProperty('--pop-c', p.color);
+    cpShade.style.setProperty('--shade-dark', shadeColor(p.baseColor, -SHADE_RANGE));
+    cpShade.style.setProperty('--shade-base', p.baseColor);
+    cpShade.style.setProperty('--shade-light', shadeColor(p.baseColor, SHADE_RANGE));
+    cpHex.textContent = p.color.toUpperCase();
+    cpNative.value = p.baseColor;
+    for (const c of colorPop.querySelectorAll('.cp-cell')) {
+      c.classList.toggle('selected', c.dataset.hex === p.baseColor.toLowerCase());
+    }
+  }
+
+  function placeColorPop() {
+    const r = popBtn.getBoundingClientRect();
+    const w = colorPop.offsetWidth;
+    const h = colorPop.offsetHeight;
+    const left = Math.max(8, Math.min(r.right - w, innerWidth - w - 8));
+    let top = r.bottom + 6;
+    if (top + h > innerHeight - 8) top = Math.max(8, r.top - h - 6);
+    colorPop.style.left = `${left}px`;
+    colorPop.style.top = `${top}px`;
+  }
+
+  function closeColorPop() {
+    colorPop.hidden = true;
+    popBtn?.classList.remove('open');
+    popRow = -1;
+    popBtn = null;
+  }
+
+  function toggleColorPop(i, btn) {
+    if (popRow === i) { closeColorPop(); return; }
+    closeColorPop();
+    popRow = i;
+    popBtn = btn;
+    btn.classList.add('open');
+    cpShade.value = draft[i].shade;
+    applyPopColor();
+    colorPop.hidden = false;
+    placeColorPop();
+  }
+
+  cpShade.addEventListener('input', () => {
+    draft[popRow].shade = Number(cpShade.value);
+    applyPopColor();
+  });
+  cpShade.addEventListener('dblclick', () => {  // double-click puts the slider back to the picked color
+    draft[popRow].shade = 0;
+    cpShade.value = 0;
+    applyPopColor();
+  });
+  document.getElementById('cpMore').addEventListener('click', () => {
+    try { cpNative.showPicker(); } catch (e) { cpNative.click(); }
+  });
+  cpNative.addEventListener('input', () => {
+    if (popRow < 0) return;
+    draft[popRow].baseColor = cpNative.value;
+    draft[popRow].shade = 0;
+    cpShade.value = 0;
+    applyPopColor();
+  });
+  // close on a click outside, on scroll, and on Esc (without also closing the editor)
+  editor.addEventListener('pointerdown', (e) => {
+    if (popRow >= 0 && !colorPop.contains(e.target) && !popBtn.contains(e.target)) closeColorPop();
+  });
+  editorRows.addEventListener('scroll', closeColorPop);
+  window.addEventListener('resize', () => { if (popRow >= 0) placeColorPop(); });
+  editor.addEventListener('cancel', (e) => {
+    if (popRow >= 0) {
+      e.preventDefault();
+      closeColorPop();
+    }
+  });
+  editor.addEventListener('close', closeColorPop);
+
+  function openEditor() {
+    if (locked) return;
+    draft = prizes.map(editable);
+    draftSettings = { ...settings };
+    activeRow = 0;
+    syncSettingsForm();
+    buildEditorRows();
+    editor.showModal();
+  }
+
+  editBtn.addEventListener('click', openEditor);
+  document.getElementById('cancelEdit').addEventListener('click', () => editor.close());
+  document.getElementById('resetPrizes').addEventListener('click', () => {
+    if (!confirm('선물과 게임 설정을 기본값으로 되돌릴까요? (Reset prizes and game settings?)')) return;
+    draft = DEFAULT_PRIZES.map(editable);
+    draftSettings = { ...DEFAULT_SETTINGS };
+    syncSettingsForm();
+    buildEditorRows();
+  });
+  editorForm.addEventListener('submit', (e) => {
+    const empty = editorIndices().find(i => !draft[i].name.trim());
+    if (empty !== undefined) {
+      e.preventDefault();
+      editorNote.textContent = `${winsLabel(empty)}승 선물 이름을 입력해 주세요.`;
+      rowEls[empty].querySelector('.ed-name').focus();
+      return;
+    }
+    prizes = draft.map(p => ({ ...p, name: p.name.trim(), sub: p.sub.trim(), icon: p.icon.trim() || '🎁' }));
+    const stagesChanged = draftSettings.stages !== settings.stages;
+    settings = { ...draftSettings };
+    if (!savePrizes() || !saveSettings()) {
+      alert('이 브라우저에 저장하지 못했어요. 새로고침하면 원래대로 돌아가요.\n(Could not save in this browser.)');
+    }
+    renderPrizes();
+    if (stagesChanged) {
+      restart();  // a different ladder can't continue the current run
+    } else {
+      updateStageLabel();
+    }
+  });
+
+  btnOdd.addEventListener('click', () => selectGuess('odd'));
+  btnEven.addEventListener('click', () => selectGuess('even'));
+  // Pointer events cover mouse, touch and pen. A touch drag also ends in a click,
+  // so swallow that click to keep a finger spin from rolling the dice.
+  let touchDragged = false;
+  let touchStart = null;
+  diceRow.addEventListener('click', () => {
+    if (touchDragged) {
+      touchDragged = false;
+      return;
+    }
+    rollDice();
+  });
+  for (const [pedestal, state] of [[pedestal1, cubeState1], [pedestal2, cubeState2]]) {
+    pedestal.addEventListener('pointerdown', (e) => {
+      state.lastMove = e.timeStamp;
+      state.lastX = e.clientX;
+      state.lastY = e.clientY;
+      touchDragged = false;
+      touchStart = e.pointerType === 'mouse' ? null : { x: e.clientX, y: e.clientY };
+    });
+    pedestal.addEventListener('pointermove', (e) => {
+      if (touchStart && Math.hypot(e.clientX - touchStart.x, e.clientY - touchStart.y) > 10) {
+        touchDragged = true;
+      }
+      flickDie(state, e);
+    });
+  }
+  diceRow.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      rollDice();
+    }
+  });
+  restartBtn.addEventListener('click', restart);
+
+  const PAGE_MARGIN = 10;
+  const PORTRAIT_MIN_W = 705;
+  const overStage = document.getElementById('overStage');
+  const WIDTH_VAR = new Map();  // element -> the CSS variable holding its portrait width
+
+  // Portrait windows wider than the 705px-wide layout's shape would leave empty margins left
+  // and right; widen the layout (heights unchanged) to the window's shape instead.
+  const DICE_MAX_K = 1.3;  // the dice grow at most this much; beyond it the win picture would get too small
+  function widenForPortrait(el) {
+    const name = WIDTH_VAR.get(el);
+    const root = document.documentElement;
+    root.style.removeProperty(name);  // measure at the base width
+    if (el === layout) {
+      root.style.removeProperty('--dice-k');
+      root.style.removeProperty('--dice-extra');
+    }
+    if (!matchMedia('(max-aspect-ratio: 1/1)').matches || !el.offsetHeight) return;
+    const fit = el.offsetHeight * (innerWidth - PAGE_MARGIN * 2) / (innerHeight - PAGE_MARGIN * 2);
+    if (fit <= PORTRAIT_MIN_W) return;
+    root.style.setProperty(name, `${Math.floor(fit)}px`);
+    if (el === layout) {
+      // keep the dice about as wide a share of the card as at the base width
+      const k = Math.min(DICE_MAX_K, fit / PORTRAIT_MIN_W);
+      root.style.setProperty('--dice-extra', `${Math.round(diceRow.offsetHeight * (k - 1))}px`);
+      root.style.setProperty('--dice-k', k.toFixed(3));
+    }
+  }
+
+  function fitToWindow(el) {
+    if (!el.offsetWidth) return;  // hidden right now; fitted again when shown
+    widenForPortrait(el);
+    const scale = Math.min(
+      1,
+      (window.innerWidth - PAGE_MARGIN * 2) / el.offsetWidth,
+      (window.innerHeight - PAGE_MARGIN * 2) / el.offsetHeight,
+    );
+    el.style.transform = scale < 1 ? `scale(${scale})` : '';
+  }
+  WIDTH_VAR.set(layout, '--portrait-w').set(overStage, '--over-w');
+  function fitCardToWindow() {
+    fitToWindow(layout);
+    placeHandDie();  // the character's size differs between layouts
+    fitToWindow(overStage);
+    layoutWinGallery();
+  }
+  window.addEventListener('resize', fitCardToWindow);
+  fitCardToWindow();
+  shadeCube(cubeState1);
+  shadeCube(cubeState2);
+
+  sumLabel.innerHTML = SUM_HINT;
+  renderRollLog();
+  updateStageLabel();
+</script>
 </body>
 </html>
