@@ -548,19 +548,19 @@
     .prize-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(58px, auto); gap: 8px 14px; }
     /* larger prize boxes and text for the two-column ladder */
     .prize { max-height: 92px; border-width: 3px; padding-right: 12px; }
-    .prize-badge { flex-basis: 78px; font-size: 2.2rem; }
-    .prize-name { font-size: 2.4rem; }
+    .prize-badge { flex-basis: 78px; font-size: 2.4rem; }
+    .prize-name { font-size: 2.6rem; }
     .prize-icon { font-size: 2.0rem; }
     .prize-check { font-size: 0.95rem; right: 52px; }
     .prize:not(.grand):nth-child(odd):nth-last-child(2) { grid-column: 1 / -1; }  /* a lone prize on the last row stretches like the grand one */
     .prize.grand { grid-column: 1 / -1; min-height: 78px; max-height: 110px; }  /* taller row for the larger grand name */
-    .prize.grand .prize-name { font-size: 3.1rem; }
+    .prize.grand .prize-name { font-size: 3.3rem; }
     /* on a widened card the dice grow by --dice-k; the win picture gives up the height they take */
     .dice-row { zoom: var(--dice-z, 1); }
     /* the three characters are larger in portrait. The top-right one also grows with the card like
        the dice; the bottom two stay put so they don't climb behind the hint text and the buttons. */
     .card > .bg-girl.dice  { width: 380px; }
-    .card > .bg-girl.cheer { width: 284px; }
+    .card > .bg-girl.cheer { width: 312px; }
     .card > .bg-girl.bite  { width: calc(160px * var(--dice-k, 1)); }
     /* bigger odd / even and cash-out buttons, still clear of the two bottom characters */
     .card .guess-btn { width: 150px; padding: 16px 0; font-size: 1.25rem; }
