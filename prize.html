@@ -6,6 +6,9 @@
 <title>주사위 홀짝게임</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="girl-dice.png?v=9">
+<link rel="preload" as="image" href="girl-cheer.png">
+<link rel="preload" as="image" href="girl-bite.png">
 <style>
   :root {
     --bg: #ffd6e8;
@@ -576,6 +579,7 @@
   }
   .card > * { position: relative; z-index: 1; }
   .card > .bg-girl {
+    height: auto;  /* the width/height attributes only reserve the aspect ratio; the CSS width sets the size */
     position: absolute;
     z-index: 0;
     pointer-events: none;
@@ -1197,10 +1201,10 @@
 <body>
   <div class="layout" id="layout">
   <div class="card" id="card">
-    <img class="bg-girl dice" src="girl-dice.png?v=9" alt="">
-    <img class="bg-girl cheer" src="girl-cheer.png" alt="">
+    <img class="bg-girl dice" src="girl-dice.png?v=9" width="484" height="436" fetchpriority="high" alt="">
+    <img class="bg-girl cheer" src="girl-cheer.png" width="308" height="402" fetchpriority="high" alt="">
     <div class="girl-bubble" id="girlBubble" role="status" hidden></div>
-    <img class="bg-girl bite" src="girl-bite.png" alt="">
+    <img class="bg-girl bite" src="girl-bite.png" width="396" height="397" fetchpriority="high" alt="">
     <div class="hand-die" id="handDie" aria-hidden="true"></div>
     <h1 id="title">🎲 주사위 홀짝게임 <span class="en">Dice Odd · Even</span></h1>
     <div class="stage-label" id="stageLabel">스테이지 1 / 10</div>
@@ -1530,6 +1534,11 @@
     if (handDie.classList.contains('flying')) return;
     const { x, y, k } = handSpot();
     handDie.style.transform = `translate(${x}px, ${y}px) scale(${k})`;
+  }
+
+  // The die and the bubble are placed from the girls' measured size, so measure again whenever a picture arrives late.
+  for (const img of document.querySelectorAll('.bg-girl')) {
+    img.addEventListener('load', () => { placeHandDie(); placeBubble(); });
   }
 
   function showHandDie() {
