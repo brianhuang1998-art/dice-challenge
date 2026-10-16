@@ -2660,13 +2660,18 @@
     }
   });
 
-  btnOdd.addEventListener('click', () => selectGuess('odd'));
-  btnEven.addEventListener('click', () => selectGuess('even'));
+  btnOdd.addEventListener('click', (e) => { selectGuess('odd'); blurAfterPointer(e, btnOdd); });
+  btnEven.addEventListener('click', (e) => { selectGuess('even'); blurAfterPointer(e, btnEven); });
   // Pointer events cover mouse, touch and pen. A touch drag also ends in a click,
   // so swallow that click to keep a finger spin from rolling the dice.
   let touchDragged = false;
   let touchStart = null;
-  diceRow.addEventListener('click', () => {
+  // A mouse / touch click leaves the element focused, and the next key press (chat, a hotkey...) would then
+  // light up its keyboard-focus ring (the red dashed frame). Drop the focus after pointer clicks; real
+  // keyboard use (event.detail === 0) keeps it so the ring still shows where the focus is.
+  const blurAfterPointer = (e, el) => { if (e.detail > 0) el.blur(); };
+  diceRow.addEventListener('click', (e) => {
+    blurAfterPointer(e, diceRow);
     if (touchDragged) {
       touchDragged = false;
       return;
