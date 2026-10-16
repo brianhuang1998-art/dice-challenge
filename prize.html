@@ -561,7 +561,7 @@
        the dice; the bottom two stay put so they don't climb behind the hint text and the buttons. */
     .card > .bg-girl.dice  { width: 380px; }
     .card > .bg-girl.cheer { width: 312px; }
-    .card > .girl-bubble { max-width: 370px; font-size: 1.75rem; padding: 12px 22px; border-radius: 22px; }
+    .card > #girlBubble { max-width: 430px; font-size: 2.1rem; padding: 14px 26px; border-radius: 24px; }
     .card > .bg-girl.bite  { width: calc(160px * var(--dice-k, 1)); }
     /* bigger odd / even and cash-out buttons, still clear of the two bottom characters */
     .card .guess-btn { width: 150px; padding: 16px 0; font-size: 1.25rem; }
@@ -632,16 +632,17 @@
   .card > .girl-bubble {
     position: absolute;
     z-index: 3;
-    max-width: 270px;
-    padding: 9px 18px;
-    font-size: 1.3rem;
+    max-width: 310px;
+    padding: 10px 20px;
+    font-size: 1.6rem;
     font-weight: bold;
     line-height: 1.3;
     text-align: center;
     word-break: keep-all;  /* Korean wraps between words, not mid-word */
     color: #15803d;
     background: #fff;
-    border: 3px solid #f78bb7;
+    --bd: #f78bb7;
+    border: 3px solid var(--bd);
     border-radius: 18px;
     box-shadow: 0 5px 12px rgba(224,64,122,0.25);
     pointer-events: none;
@@ -657,10 +658,11 @@
     width: 14px;
     height: 14px;
     background: #fff;
-    border-right: 3px solid #f78bb7;
-    border-bottom: 3px solid #f78bb7;
+    border-right: 3px solid var(--bd);
+    border-bottom: 3px solid var(--bd);
     transform: rotate(45deg);
   }
+  .card > .girl-bubble.lose { color: var(--danger); --bd: #ee8a9c; }
   .girl-bubble .en { display: block; margin: 3px 0 0; font-size: 1em; opacity: 0.8; }
   @keyframes bubblePop { from { transform: scale(0.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   /* the line now lives in the bubble; keep its slot so the win picture doesn't jump */
@@ -1890,8 +1892,9 @@
     girlBubble.style.setProperty('--tail', `${tail}px`);
   }
 
-  function showBubble(html) {
+  function showBubble(html, tone) {
     girlBubble.innerHTML = html;
+    girlBubble.classList.toggle('lose', tone === 'lose');
     girlBubble.hidden = false;
     girlBubble.style.animation = 'none';
     void girlBubble.offsetWidth;  // restart the pop-in
@@ -1937,6 +1940,7 @@
     } else {
       message.innerHTML = '틀렸습니다. 게임 종료! <span class="en">Wrong guess. Game over!</span>';
       message.classList.add('lose');
+      showBubble('So sad ～', 'lose');
       prizeEls.forEach(el => {
         if (el.classList.contains('done')) el.classList.replace('done', 'lost');
       });
