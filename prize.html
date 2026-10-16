@@ -79,10 +79,11 @@
     position: relative;
     text-align: center;
     margin-bottom: 4px;
+    padding-top: 26px;  /* the bigger title sits below the edit button (portrait has room beside it, see below) */
   }
   .ladder-title {
     font-family: var(--title-font);
-    font-size: 1.75rem;
+    font-size: 2.1rem;
     line-height: 1.1;
     background: linear-gradient(180deg, #ff5f9e, #b0247a);
     -webkit-background-clip: text;
@@ -93,8 +94,8 @@
   .ladder-ribbon {
     display: inline-block;
     margin-top: 6px;
-    padding: 3px 16px;
-    font-size: 0.85rem;
+    padding: 4px 18px;
+    font-size: 1.1rem;
     font-weight: bold;
     color: var(--accent);
     background: #fff;
@@ -268,8 +269,8 @@
   .edit-btn {
     position: absolute;
     z-index: 2;  /* .ladder-title's filter paints it above earlier positioned siblings */
-    right: -6px;
-    top: -8px;
+    right: -12px;
+    top: -14px;
     padding: 8px 16px;
     font-size: 1.05rem;
     font-weight: bold;
@@ -543,11 +544,13 @@
   @media (max-aspect-ratio: 1/1) {
     .layout { flex-direction: column; }
     /* --portrait-w: 705px, or wider when the window is wide enough to fill (set by fitToWindow) */
-    .card { height: 1090px; width: var(--portrait-w, 705px); }
+    .card { height: 1094px; width: var(--portrait-w, 705px); }
     .ladder { width: var(--portrait-w, 705px); height: auto; }
-    .roll-log-title { font-size: 0.85rem; margin-bottom: 4px; }
+    .ladder-head { padding-top: 0; }
+    .roll-log { padding-top: 3px; }
+    .roll-log-title { font-size: 0.72rem; margin-bottom: 2px; }
     .roll-log-list { gap: 4px; }
-    .roll-log-list li { flex: 0 0 calc((100% - 36px) / 10); text-align: center; font-size: 0.88rem; padding: 1px 3px; }
+    .roll-log-list li { flex: 0 0 calc((100% - 36px) / 10); text-align: center; font-size: 0.8rem; padding: 0 3px; }
     .prize-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(58px, auto); gap: 8px 14px; }
     /* larger prize boxes and text for the two-column ladder */
     .prize { max-height: 92px; border-width: 3px; padding-right: 12px; }
@@ -686,19 +689,19 @@
     margin: 0 0 6px;
     font-family: var(--title-font);
     font-weight: normal;
-    font-size: 2.3rem;
+    font-size: 2.5rem;
     line-height: 1.2;
     color: #d21c6a;
     text-shadow: 0 2px 0 #fff, 0 4px 6px rgba(194,39,106,0.2);
   }
-  .stage-label { color: var(--accent); font-weight: bold; margin-bottom: 10px; font-size: 1.3rem; line-height: 1.2; }
+  .stage-label { color: var(--accent); font-weight: bold; margin-bottom: 10px; font-size: 1.6rem; line-height: 1.2; }
   .next-prize {
     display: inline-block;
     margin-left: 10px;
-    padding: 2px 12px;
+    padding: 2px 14px;
     font-family: var(--title-font);
     font-weight: normal;
-    font-size: 1.05rem;
+    font-size: 1.3rem;
     color: #fff;
     background: var(--prize-color, var(--accent));
     border-radius: 999px;
