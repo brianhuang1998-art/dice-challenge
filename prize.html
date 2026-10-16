@@ -1143,7 +1143,7 @@
 <body>
   <div class="layout" id="layout">
   <div class="card" id="card">
-    <img class="bg-girl dice" src="girl-dice.png" alt="">
+    <img class="bg-girl dice" src="girl-dice.png?v=9" alt="">
     <img class="bg-girl cheer" src="girl-cheer.png" alt="">
     <img class="bg-girl bite" src="girl-bite.png" alt="">
     <div class="hand-die" id="handDie" aria-hidden="true"></div>
@@ -1351,10 +1351,10 @@
   const DRAG_RATIO = 0.8;      // degrees of spin per pixel of mouse movement
   const SPIN_FRICTION = 2.0;   // higher = the die stops sooner after the mouse stops
   const MAX_SPIN_SPEED = 2500; // degrees per second
-  const WIN_LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x'];
-  const LOSE_IMG_COUNT = 31;
+  const WIN_LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'aa', 'ab'];
+  const LOSE_IMG_COUNT = 41;
   // Bump after replacing any image file so browsers stop showing the cached old one.
-  const IMG_VERSION = 4;
+  const IMG_VERSION = 8;
   const IMG_REVEAL_MAX_MS = 600;  // longest wait for a new win/lose picture before showing it anyway
   const ROLL_MS = 1500;        // dice tumble time; the result shows when it ends
   const CASH_OUT_CONFIRM_MS = 3000;  // how long the "tap again to confirm" state waits
