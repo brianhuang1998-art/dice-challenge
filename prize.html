@@ -540,8 +540,11 @@
   @media (max-aspect-ratio: 1/1) {
     .layout { flex-direction: column; }
     /* --portrait-w: 705px, or wider when the window is wide enough to fill (set by fitToWindow) */
-    .card { height: 1066px; width: var(--portrait-w, 705px); }
+    .card { height: 1090px; width: var(--portrait-w, 705px); }
     .ladder { width: var(--portrait-w, 705px); height: auto; }
+    .roll-log-title { font-size: 0.85rem; margin-bottom: 4px; }
+    .roll-log-list { gap: 4px; }
+    .roll-log-list li { flex: 0 0 calc((100% - 36px) / 10); text-align: center; font-size: 0.88rem; padding: 1px 3px; }
     .prize-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(58px, auto); gap: 8px 14px; }
     /* larger prize boxes and text for the two-column ladder */
     .prize { max-height: 92px; border-width: 3px; padding-right: 12px; }
@@ -549,14 +552,15 @@
     .prize-name { font-size: 2.2rem; }
     .prize-icon { font-size: 1.8rem; }
     .prize-check { font-size: 0.95rem; right: 52px; }
+    .prize:not(.grand):nth-child(odd):nth-last-child(2) { grid-column: 1 / -1; }  /* a lone prize on the last row stretches like the grand one */
     .prize.grand { grid-column: 1 / -1; min-height: 78px; max-height: 110px; }  /* taller row for the larger grand name */
     .prize.grand .prize-name { font-size: 2.9rem; }
     /* on a widened card the dice grow by --dice-k; the win picture gives up the height they take */
     .dice-row { zoom: var(--dice-k, 1); }
     /* the three characters are larger in portrait. The top-right one also grows with the card like
        the dice; the bottom two stay put so they don't climb behind the hint text and the buttons. */
-    .card > .bg-girl.dice  { width: 264px; }
-    .card > .bg-girl.cheer { width: 236px; }
+    .card > .bg-girl.dice  { width: 318px; }
+    .card > .bg-girl.cheer { width: 284px; }
     .card > .bg-girl.bite  { width: calc(160px * var(--dice-k, 1)); }
     /* bigger odd / even and cash-out buttons, still clear of the two bottom characters */
     .card .guess-btn { width: 150px; padding: 16px 0; font-size: 1.25rem; }
@@ -1887,7 +1891,7 @@
       const li = document.createElement('li');
       const sum = r.a + r.b;
       li.className = r.win ? 'win' : 'lose';
-      li.textContent = `${r.stage}. ${r.a}+${r.b} ${r.guess === 'odd' ? '홀' : '짝'} `;
+      li.textContent = `${r.stage}. ${r.a}+${r.b} `;
       const mark = document.createElement('span');
       mark.className = 'log-mark';
       mark.textContent = r.win ? '✓' : '✗';
