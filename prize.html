@@ -1881,11 +1881,40 @@
   }
 
   // The cheering girl says the win line: the bubble sits just above her head, tail on her face.
+  // The win line must not cover the win picture: it gets only the room between the picture's right edge
+  // and the card's edge, so the text wraps and, if a word still doesn't fit, shrinks (down to MIN_BUBBLE_PX).
+  const MIN_BUBBLE_PX = 15;
+  function fitBubble(edge) {
+    girlBubble.style.maxWidth = '';
+    girlBubble.style.fontSize = '';
+    girlBubble.style.padding = '';
+    if (girlBubble.classList.contains('lose')) return;  // no win picture is shown after a wrong guess
+    const cr = card.getBoundingClientRect();
+    const k = cr.width / card.offsetWidth;
+    const imgRight = (winImg.getBoundingClientRect().right - cr.left) / k;
+    const avail = Math.floor(card.offsetWidth - edge - imgRight - 10);
+    if (avail < 60) return;
+    girlBubble.style.maxWidth = `${avail}px`;
+    const cs = getComputedStyle(girlBubble);
+    const base = parseFloat(cs.fontSize);
+    const padX = parseFloat(cs.paddingLeft);
+    // also keep clear of the sum line above (it grows upward from the girl's head as the text wraps)
+    const sumBottom = (sumLabel.getBoundingClientRect().bottom - cr.top) / k + 6;
+    for (let f = base; f >= MIN_BUBBLE_PX; f -= 1) {
+      girlBubble.style.fontSize = `${f}px`;
+      girlBubble.style.paddingLeft = girlBubble.style.paddingRight = `${Math.max(8, Math.round(padX * f / base))}px`;
+      // layout numbers, not getBoundingClientRect: the pop-in animation is scaling the bubble right now
+      const top = card.offsetHeight - parseFloat(girlBubble.style.bottom) - girlBubble.offsetHeight;
+      if (girlBubble.scrollWidth <= girlBubble.clientWidth + 1 && top >= sumBottom) break;
+    }
+  }
+
   function placeBubble() {
     if (girlBubble.hidden || !cheerGirl.offsetWidth) return;
     const edge = 12;
     girlBubble.style.right = `${edge}px`;
     girlBubble.style.bottom = `${card.offsetHeight - cheerGirl.offsetTop - cheerGirl.offsetHeight * 0.28}px`;
+    fitBubble(edge);
     const left = card.offsetWidth - edge - girlBubble.offsetWidth;
     const faceX = cheerGirl.offsetLeft + cheerGirl.offsetWidth * 0.5;
     const tail = Math.max(18, Math.min(girlBubble.offsetWidth - 34, faceX - left - 7));
