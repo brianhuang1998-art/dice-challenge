@@ -561,7 +561,7 @@
        the dice; the bottom two stay put so they don't climb behind the hint text and the buttons. */
     .card > .bg-girl.dice  { width: 380px; }
     .card > .bg-girl.cheer { width: 312px; }
-    .card > .girl-bubble { max-width: 300px; font-size: 1.35rem; padding: 10px 18px; }
+    .card > .girl-bubble { max-width: 370px; font-size: 1.75rem; padding: 12px 22px; border-radius: 22px; }
     .card > .bg-girl.bite  { width: calc(160px * var(--dice-k, 1)); }
     /* bigger odd / even and cash-out buttons, still clear of the two bottom characters */
     .card .guess-btn { width: 150px; padding: 16px 0; font-size: 1.25rem; }
@@ -632,9 +632,9 @@
   .card > .girl-bubble {
     position: absolute;
     z-index: 3;
-    max-width: 230px;
-    padding: 8px 14px;
-    font-size: 1.1rem;
+    max-width: 270px;
+    padding: 9px 18px;
+    font-size: 1.3rem;
     font-weight: bold;
     line-height: 1.3;
     text-align: center;
@@ -661,10 +661,14 @@
     border-bottom: 3px solid #f78bb7;
     transform: rotate(45deg);
   }
-  .girl-bubble .en { display: block; margin: 2px 0 0; font-size: 0.85em; }
+  .girl-bubble .en { display: block; margin: 3px 0 0; font-size: 1em; opacity: 0.8; }
   @keyframes bubblePop { from { transform: scale(0.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   /* the line now lives in the bubble; keep its slot so the win picture doesn't jump */
   .message.win.in-bubble { visibility: hidden; }
+  /* the dice and the sum line sit lower, using the room the win line left behind (visual shift only, so nothing else moves);
+     a wrong guess prints its message right under the sum line, so they stay put then */
+  .dice-row, .sum-label { translate: 0 1.6rem; transition: translate 0.3s ease; }
+  #gameArea:has(.message.lose) .dice-row, #gameArea:has(.message.lose) .sum-label { translate: 0 0; }
   .bg-girl.bite  { width: 124px; right: -18px; top: -18px; }  /* top-right corner */
   #gameArea {
     flex: 1;
@@ -1879,7 +1883,7 @@
     if (girlBubble.hidden || !cheerGirl.offsetWidth) return;
     const edge = 12;
     girlBubble.style.right = `${edge}px`;
-    girlBubble.style.bottom = `${card.offsetHeight - cheerGirl.offsetTop - cheerGirl.offsetHeight * 0.14}px`;
+    girlBubble.style.bottom = `${card.offsetHeight - cheerGirl.offsetTop - cheerGirl.offsetHeight * 0.28}px`;
     const left = card.offsetWidth - edge - girlBubble.offsetWidth;
     const faceX = cheerGirl.offsetLeft + cheerGirl.offsetWidth * 0.5;
     const tail = Math.max(18, Math.min(girlBubble.offsetWidth - 34, faceX - left - 7));
