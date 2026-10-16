@@ -715,7 +715,8 @@
     gap: 56px;
     margin: 12px 0 4px;
   }
-  .dice-row:focus-visible { outline: 3px dashed var(--accent); outline-offset: 6px; border-radius: 20px; }
+  /* no keyboard-focus frame around the dice: it popped up on stream whenever the host rolled with Enter / Space or tabbed in */
+  .dice-row:focus-visible { outline: none; }
   .dice-row.ready { cursor: pointer; }
   .dice-row.rolling {
     pointer-events: none;
