@@ -540,11 +540,17 @@
     /* --portrait-w: 705px, or wider when the window is wide enough to fill (set by fitToWindow) */
     .card { height: 880px; width: var(--portrait-w, 705px); }
     .ladder { width: var(--portrait-w, 705px); height: auto; }
-    .prize-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(42px, auto); gap: 7px 14px; }
+    .prize-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(58px, auto); gap: 8px 14px; }
+    /* larger prize boxes and text for the two-column ladder */
+    .prize { max-height: 92px; border-width: 3px; padding-right: 12px; }
+    .prize-badge { flex-basis: 78px; font-size: 2rem; }
+    .prize-name { font-size: 2.2rem; }
+    .prize-icon { font-size: 1.8rem; }
+    .prize-check { font-size: 0.95rem; right: 52px; }
     /* the wide ladder fits a full run of log entries in two lines; prize list : log is about 82 : 18 */
     .roll-log-list { height: 36px; }
-    .prize.grand { grid-column: 1 / -1; min-height: 58px; }  /* taller row for the larger grand name */
-    .prize.grand .prize-name { font-size: 2.5rem; }
+    .prize.grand { grid-column: 1 / -1; min-height: 78px; max-height: 110px; }  /* taller row for the larger grand name */
+    .prize.grand .prize-name { font-size: 2.9rem; }
     /* on a widened card the dice grow by --dice-k; the win picture gives up the height they take */
     .dice-row { zoom: var(--dice-k, 1); }
     /* the three characters are larger in portrait. The top-right one also grows with the card like
