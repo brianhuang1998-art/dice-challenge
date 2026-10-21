@@ -566,7 +566,10 @@
     .prize.grand .prize-name { font-size: 3.3rem; }
     /* on a widened card the dice grow by --dice-k; the win picture gives up the height they take */
     /* scaled with transform (not zoom) so the 3D dice stay on the GPU while dragged; the margin gives back the height zoom used to add */
-    .dice-row { transform: scale(var(--dice-z, 1)); transform-origin: 50% 0; margin-bottom: calc(4px + var(--dice-extra, 0px)); }
+    .dice-row { transform: scale(var(--dice-z, 1)); transform-origin: 50% 0; }
+    /* .card prefix: the base .dice-row margin is declared later and would win; zoom used to scale the margins and the downward shift too */
+    .card .dice-row { margin: calc(12px * var(--dice-z, 1)) 0 calc(4px * var(--dice-z, 1) + var(--dice-extra, 0px)); }
+    .card #gameArea .dice-row { translate: 0 calc(1.6rem * var(--dice-z, 1)); }
     /* the three characters are larger in portrait. The top-right one also grows with the card like
        the dice; the bottom two stay put so they don't climb behind the hint text and the buttons. */
     .card > .bg-girl.dice  { width: 320px; }
