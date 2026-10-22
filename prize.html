@@ -1687,15 +1687,32 @@
     fitPrizeNames();
   }
 
-  // A name keeps its full size (--fit: 1) while it fits its row; a longer one shrinks just enough to fit.
+  // Every row shrinks its name against the same fixed width, whatever the window or the row's real width
+  // (the lone last portrait rows and a widened portrait card are wider), so equal names look equal at every stage.
+  // A name keeps its full size (--fit: 1) while it fits; a longer one shrinks just enough to fit.
   // Text width scales with font size, so one measurement at full size gives the exact factor.
+  const NAME_WIDTH = { landscape: 182, landscapeGrand: 146, portrait: 311 };  // px, as laid out at the base card size
   const MIN_NAME_FIT = 0.4;  // below this the ellipsis takes over
   function fitPrizeNames() {
+    const portrait = matchMedia('(max-aspect-ratio: 1/1)').matches;
     const names = [...prizeList.querySelectorAll('.prize-name')];
-    for (const el of names) el.style.removeProperty('--fit');
-    const fits = names.map(el => {
-      if (!el.clientWidth || el.scrollWidth <= el.clientWidth) return 1;  // hidden, or already fits
-      return Math.max(MIN_NAME_FIT, Math.floor((el.clientWidth - 1) / el.scrollWidth * 1000) / 1000);
+    for (const el of names) {
+      el.style.removeProperty('--fit');
+      el.style.flex = 'none';
+      el.style.width = 'max-content';  // so offsetWidth is the text's own width at full size
+    }
+    const textW = names.map(el => el.offsetWidth);
+    const boxW = names.map(el => {
+      el.style.flex = el.style.width = '';
+      return el.clientWidth;
+    });
+    const fits = names.map((el, i) => {
+      if (!boxW[i]) return 1;  // hidden right now
+      const grand = el.parentElement.classList.contains('grand');
+      const fixed = portrait ? NAME_WIDTH.portrait : grand ? NAME_WIDTH.landscapeGrand : NAME_WIDTH.landscape;
+      const room = Math.min(fixed, boxW[i]) - 1;
+      if (textW[i] <= room) return 1;
+      return Math.max(MIN_NAME_FIT, Math.floor(room / textW[i] * 1000) / 1000);
     });
     names.forEach((el, i) => { if (fits[i] < 1) el.style.setProperty('--fit', fits[i]); });
   }
