@@ -1734,7 +1734,7 @@
   // wins = stages already cleared; the row for the next win is the current target.
   function updateLadder(wins) {
     prizeEls.forEach((el, i) => {
-      el.classList.remove('lost');
+      el.classList.remove('lost', 'just-won');  // just-won would otherwise override the current-row pulse and the lost shake
       el.classList.toggle('done', i < wins);
       el.classList.toggle('current', i === wins);
     });
