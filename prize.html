@@ -1662,20 +1662,11 @@
       + `<span class="prize-icon">${iconHtml(p)}</span>`;
   }
 
-  // names up to the length of the default "시그댄스" use the full size; longer ones shrink in proportion, down to a floor
-  const FULL_SIZE_CHARS = 4;
-  const MIN_NAME_FIT = 0.5;
-  function nameFit(p) {
-    const len = [...p.name].length + [...(p.sub || '')].length;
-    return Math.max(MIN_NAME_FIT, Math.min(1, FULL_SIZE_CHARS / len)).toFixed(3);
-  }
-
   function prizeEl(p, tag = 'li') {
     const el = document.createElement(tag);
     el.className = 'prize' + (p.grand ? ' grand' : '');
     el.style.setProperty('--c', p.color);
     el.innerHTML = prizeHtml(p);
-    el.querySelector('.prize-name').style.setProperty('--fit', nameFit(p));
     return el;
   }
 
@@ -1693,8 +1684,23 @@
     grandPrize.style.setProperty('--grand-size', len <= 4 ? '5.5rem' : len <= 8 ? '3.2rem' : '2.2rem');
     grandIcon.innerHTML = iconHtml(grand);
     grandCard.style.setProperty('--c', grand.color);
+    fitPrizeNames();
+  }
+
+  // A name keeps its full size (--fit: 1) while it fits its row; a longer one shrinks just enough to fit.
+  // Text width scales with font size, so one measurement at full size gives the exact factor.
+  const MIN_NAME_FIT = 0.4;  // below this the ellipsis takes over
+  function fitPrizeNames() {
+    const names = [...prizeList.querySelectorAll('.prize-name')];
+    for (const el of names) el.style.removeProperty('--fit');
+    const fits = names.map(el => {
+      if (!el.clientWidth || el.scrollWidth <= el.clientWidth) return 1;  // hidden, or already fits
+      return Math.max(MIN_NAME_FIT, Math.floor((el.clientWidth - 1) / el.scrollWidth * 1000) / 1000);
+    });
+    names.forEach((el, i) => { if (fits[i] < 1) el.style.setProperty('--fit', fits[i]); });
   }
   renderPrizes();
+  document.fonts?.ready.then(fitPrizeNames);  // the title font changes the text width once it loads
 
   // wins = stages already cleared; the row for the next win is the current target.
   function updateLadder(wins) {
@@ -2777,6 +2783,7 @@
   WIDTH_VAR.set(layout, '--portrait-w').set(overStage, '--over-w');
   function fitCardToWindow() {
     fitToWindow(layout);
+    fitPrizeNames();  // the ladder's row width and font size differ between layouts
     placeHandDie();  // the character's size differs between layouts
     placeBubble();
     fitToWindow(overStage);
