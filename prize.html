@@ -9,9 +9,9 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<link rel="preload" as="image" href="girl-dice.png?v=9">
-<link rel="preload" as="image" href="girl-cheer.png">
-<link rel="preload" as="image" href="girl-bite.png">
+<link rel="preload" as="image" href="girl-dice.png?v=12">
+<link rel="preload" as="image" href="girl-cheer.png?v=2">
+<link rel="preload" as="image" href="girl-bite.png?v=2">
 <style>
   :root {
     --bg: #ffd6e8;
@@ -1424,10 +1424,10 @@
 <body>
   <div class="layout" id="layout">
   <div class="card" id="card">
-    <img class="bg-girl dice" src="girl-dice.png?v=9" width="484" height="436" fetchpriority="high" alt="">
-    <img class="bg-girl cheer" src="girl-cheer.png" width="308" height="402" fetchpriority="high" alt="">
+    <img class="bg-girl dice" src="girl-dice.png?v=12" width="968" height="872" fetchpriority="high" alt="">
+    <img class="bg-girl cheer" src="girl-cheer.png?v=2" width="616" height="804" fetchpriority="high" alt="">
     <div class="girl-bubble" id="girlBubble" role="status" hidden></div>
-    <img class="bg-girl bite" src="girl-bite.png" width="396" height="397" fetchpriority="high" alt="">
+    <img class="bg-girl bite" src="girl-bite.png?v=2" width="594" height="596" fetchpriority="high" alt="">
     <div class="hand-die" id="handDie" aria-hidden="true"></div>
     <h1 id="title">🎲 주사위 홀짝게임 <span class="en">Dice Odd · Even</span></h1>
     <div class="stage-label" id="stageLabel">스테이지 1 / 10</div>
@@ -1965,8 +1965,10 @@
     // in the tall layout the name is also centered on the row: the room right of it (padding + icon) matches the badge's on the left
     const balance = row => portrait ? row.querySelector('.prize-badge').offsetWidth - row.querySelector('.prize-icon').offsetWidth : 0;
     const gold = rows.find(r => r.classList.contains('gold')), grand = rows.find(r => r.classList.contains('grand'));
-    if (grand) prizeList.style.setProperty('--art-pad', Math.max(10, Math.round(w * 0.85 - free), balance(grand)) + 'px');
-    if (gold) prizeList.style.setProperty('--art-pad-gold', Math.max(10, Math.round(w * 0.72 - free), balance(gold)) + 'px');
+    // in the tall layout the icons sit right at the picture's edge, so they get a little air (about 14px) on top
+    const air = portrait ? 14 : 0;
+    if (grand) prizeList.style.setProperty('--art-pad', Math.max(10, Math.round(w * 0.85 - free), balance(grand)) + air + 'px');
+    if (gold) prizeList.style.setProperty('--art-pad-gold', Math.max(10, Math.round(w * 0.72 - free), balance(gold)) + air + 10 + 'px');
   }
   renderPrizes();
   document.fonts?.ready.then(fitPrizeNames);  // the title font changes the text width once it loads
