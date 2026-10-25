@@ -142,6 +142,8 @@
     font-size: 1.7rem;
     color: #fff;
     background: linear-gradient(180deg, color-mix(in srgb, var(--c) 70%, white), var(--c));
+    /* brighter and more vivid than the row color itself (browsers without relative colors keep the line above) */
+    background: linear-gradient(180deg, oklch(from var(--c) calc(l + 0.16) calc(c * 1.25) h), oklch(from var(--c) calc(l + 0.06) calc(c * 1.3) h));
     border-radius: 11px 0 0 11px;
     /* poster-style numerals: white fill, thick outline in a deep shade of the row color */
     -webkit-text-stroke: 4px color-mix(in srgb, var(--c) 55%, black);
@@ -401,7 +403,7 @@
     position: absolute;
     left: 50%;
     bottom: 78%;
-    font-size: 0.9em;
+    font-size: 1.1em;
     line-height: 1;
     transform: translateX(-50%) rotate(-10deg);
     filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
@@ -409,7 +411,8 @@
     pointer-events: none;
   }
   /* grand prize follows its editor color too, with a lighter shine across the name */
-  .prize.grand .prize-badge { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 55%, white), var(--c)); }
+  /* the "10승" block is a fixed red-pink (its stroke and shadow follow it), whatever color the row itself is given in the editor */
+  .prize.grand .prize-badge { --c: #ff2d55; background: linear-gradient(180deg, color-mix(in srgb, var(--c) 55%, white), var(--c)); }
   /* solid deep color with a thick white outline so it pops off the rainbow */
   .prize.grand .prize-name {
     font-size: calc(2.55rem * var(--fit, 1));
@@ -760,7 +763,10 @@
     .roll-log-title { font-size: 0.72rem; margin-bottom: 2px; }
     .roll-log-list { gap: 4px; }
     .roll-log-list li { flex: 0 0 calc((100% - 36px) / 10); text-align: center; font-size: 0.8rem; padding: 0 3px; }
-    .prize-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: minmax(58px, auto); gap: 8px 14px; }
+    /* the two columns may shrink below their content (minmax(0, ...)), so a narrow ladder squeezes the rows instead of pushing them out of the frame;
+       the list reaches 7px past the ladder's padding, which leaves every row 12px from the frame's outer edge (3px border + 16px padding - 7px) */
+    .prize-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(58px, auto); gap: 8px 14px; margin-inline: -7px; }
+    .prize.current { transform: scale(1.01); }  /* the 6px highlight ring plus a bigger bulge would touch the frame */
     /* larger prize boxes and text for the two-column ladder */
     .prize { max-height: 92px; border-width: 3px; padding-right: 12px; }
     .prize-badge { flex-basis: 78px; font-size: 2.5rem; }
@@ -773,6 +779,9 @@
     .prize.grand { grid-column: 1 / -1; min-height: 78px; max-height: 110px; }  /* taller row for the larger grand name */
     /* the 9th and grand rows are 760px wide (or the whole list when it is narrower), flush left, leaving the right end for the picture */
     .prize-list .prize.gold, .prize-list .prize.grand { width: min(760px, 100%); justify-self: start; }
+    /* the two rows end exactly where the picture's left edge starts (placePrizeArt sets their widths) */
+    .prize-list .prize.gold { width: var(--art-row-gold, min(760px, 100%)); }
+    .prize-list .prize.grand { width: var(--art-row-grand, min(760px, 100%)); }
     .prize.grand .prize-name { font-size: calc(3.5rem * var(--fit, 1)); }
     /* on a widened card the dice grow by --dice-k; the win picture gives up the height they take */
     /* scaled with transform (not zoom) so the 3D dice stay on the GPU while dragged; the margin gives back the height zoom used to add */
@@ -907,10 +916,14 @@
     font-family: var(--title-font);
     font-weight: normal;
     font-size: 2.5rem;
-    line-height: 1.2;
+    line-height: 48px;  /* a fixed line box (as tall as 2.5rem x 1.2), so the bigger Korean text does not push anything below it down */
+    height: 48px;
     color: #d21c6a;
     text-shadow: 0 2px 0 #fff, 0 4px 6px rgba(194,39,106,0.2);
   }
+  /* outlined title: the stroke is painted under the fill (paint-order), so the letters keep their size and only the outer half shows */
+  .t-ko { font-size: 1.14em; color: #ff7a9e; -webkit-text-stroke: 0.07em #e0587f; paint-order: stroke fill; }  /* soft red-pink */
+  h1 .en { font-size: 0.92em; margin-left: 2px; color: #c25ab0; opacity: 1; -webkit-text-stroke: 0.07em #9a4a98; paint-order: stroke fill; }  /* soft red-purple */
   .stage-label { color: var(--accent); font-weight: bold; margin-bottom: 10px; font-size: 1.6rem; line-height: 1.2; }
   .next-prize {
     display: inline-block;
@@ -1429,7 +1442,7 @@
     <div class="girl-bubble" id="girlBubble" role="status" hidden></div>
     <img class="bg-girl bite" src="girl-bite.png?v=2" width="594" height="596" fetchpriority="high" alt="">
     <div class="hand-die" id="handDie" aria-hidden="true"></div>
-    <h1 id="title">🎲 주사위 홀짝게임 <span class="en">Dice Odd · Even</span></h1>
+    <h1 id="title">🎲 <span class="t-ko">주사위 홀짝게임</span> <span class="en">Dice Odd · Even</span></h1>
     <div class="stage-label" id="stageLabel">스테이지 1 / 10</div>
 
     <div id="gameArea">
@@ -1931,7 +1944,10 @@
   }
 
   // The picture is laid over the right end of the 9th (gold) and grand rows and reaches down over the roll log to the ladder's bottom edge.
-  const ART_ASPECT = 448 / 540;  // width / height of prize-art.png
+  const ART_ASPECT = 640 / 772;  // width / height of prize-art.png
+  // Leftmost opaque pixel of prize-art.png (as a fraction of its width) in 48 equal horizontal bands, top to bottom (1 = empty band).
+  const ART_LEFT_EDGE = [1, .412, .361, .331, .305, .283, .261, .242, .214, .183, .162, .142, .119, .097, .08, .059, .045, .045, .047, .067, .08, .119, .111, .097,
+    .091, .089, .095, .117, .108, .044, .031, .027, .023, .022, .019, .016, .03, .139, .123, .091, .073, .067, .067, .075, .095, .13, .186, .275];
   function placePrizeArt() {
     let art = prizeList.querySelector('.prize-art');
     if (!art) {
@@ -1965,13 +1981,30 @@
     // in the tall layout the name is also centered on the row: the room right of it (padding + icon) matches the badge's on the left
     const balance = row => portrait ? row.querySelector('.prize-badge').offsetWidth - row.querySelector('.prize-icon').offsetWidth : 0;
     const gold = rows.find(r => r.classList.contains('gold')), grand = rows.find(r => r.classList.contains('grand'));
-    // in the tall layout the icons sit right at the picture's edge, so they get a little air (about 14px) on top
-    const air = portrait ? 14 : 0;
-    if (grand) prizeList.style.setProperty('--art-pad', Math.max(10, Math.round(w * 0.85 - free), balance(grand)) + air + 'px');
-    if (gold) prizeList.style.setProperty('--art-pad-gold', Math.max(10, Math.round(w * 0.72 - free), balance(gold)) + air + 10 + 'px');
+    if (portrait) {
+      // the rows end where the picture's outline starts at their height, so they touch it and nothing needs padding out of its way
+      const artLeft = prizeList.clientWidth + 6 - w;  // right: -6px
+      for (const [row, name] of [[gold, 'gold'], [grand, 'grand']]) {
+        if (!row) continue;
+        const bins = ART_LEFT_EDGE.length;
+        const from = Math.max(0, Math.floor((row.offsetTop - (bottom - h)) / h * bins));
+        const to = Math.min(bins - 1, Math.floor((row.offsetTop + row.offsetHeight - (bottom - h)) / h * bins));
+        let edge = 1;
+        for (let b = from; b <= to; b++) edge = Math.min(edge, ART_LEFT_EDGE[b]);
+        const rowW = Math.max(200, Math.floor(artLeft + edge * w - row.offsetLeft));
+        prizeList.style.setProperty(`--art-row-${name}`, rowW + 'px');
+      }
+      if (grand) prizeList.style.setProperty('--art-pad', Math.max(10, balance(grand)) + 'px');
+      if (gold) prizeList.style.setProperty('--art-pad-gold', Math.max(10, balance(gold)) + 'px');
+      return;
+    }
+    prizeList.style.removeProperty('--art-row-gold');
+    prizeList.style.removeProperty('--art-row-grand');
+    if (grand) prizeList.style.setProperty('--art-pad', Math.max(10, Math.round(w * 0.85 - free), balance(grand)) + 'px');
+    if (gold) prizeList.style.setProperty('--art-pad-gold', Math.max(10, Math.round(w * 0.72 - free), balance(gold)) + 'px');
   }
   renderPrizes();
-  document.fonts?.ready.then(fitPrizeNames);  // the title font changes the text width once it loads
+  document.fonts?.ready.then(() => fitCardToWindow());  // the title font changes the text width once it loads, and with it the layout's height and so the scale
 
   // wins = stages already cleared; the row for the next win is the current target.
   function updateLadder(wins) {
@@ -3053,8 +3086,15 @@
   }
   WIDTH_VAR.set(layout, '--portrait-w').set(overStage, '--over-w');
   function fitCardToWindow() {
-    fitToWindow(layout);
-    fitPrizeNames();  // the ladder's row width and font size differ between layouts
+    // The height measured for the scale depends on the names' --fit and the 9th / grand rows' padding, which depend on the width chosen by the
+    // previous pass (and on the previous window size). Repeat until nothing changes, so a resize and a fresh load end up with the same layout.
+    const root = document.documentElement;
+    const state = () => [layout.style.transform, root.style.getPropertyValue('--portrait-w'), root.style.getPropertyValue('--dice-k')].join('|');
+    for (let pass = 0, before = ''; pass < 6 && state() !== before; pass++) {
+      before = state();
+      fitToWindow(layout);
+      fitPrizeNames();  // the ladder's row width and font size differ between layouts
+    }
     placeHandDie();  // the character's size differs between layouts
     placeBubble();
     fitToWindow(overStage);
