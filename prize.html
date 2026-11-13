@@ -1916,11 +1916,11 @@
     art.hidden = !rows.length;
     if (!rows.length) return;
     // from the 9th row down to the bottom edge of the whole ladder, as wide as that height allows (capped by --art-w);
-    // in the tall layout the picture may also rise to the bottom of the 8th row, so it can grow past the two rows' height
+    // in the tall layout the picture may also rise to the middle of the 8th row, so it can grow past the two rows' height
     const ladderEl = prizeList.closest('.ladder');
     const portrait = matchMedia('(max-aspect-ratio: 1/1)').matches;
     const prev = rows[0].previousElementSibling;
-    const top = portrait && prev ? prev.offsetTop + prev.offsetHeight : rows[0].offsetTop;
+    const top = portrait && prev ? prev.offsetTop + prev.offsetHeight / 2 : rows[0].offsetTop;
     const bottom = ladderEl.offsetTop + ladderEl.clientTop + ladderEl.clientHeight - prizeList.offsetTop;
     const maxW = parseFloat(getComputedStyle(prizeList).getPropertyValue('--art-w'));
     const h = Math.min(bottom - top, maxW / ART_ASPECT);
